@@ -1,0 +1,3 @@
+database_path: data/audit_log.db
+dashboard_url: http://localhost:5173
+api_url: http://localhost:8000
