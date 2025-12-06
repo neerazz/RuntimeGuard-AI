@@ -68,7 +68,7 @@ fn main() {
         let prove_duration = start_prove.elapsed();
         proving_times_ms.push(prove_duration.as_secs_f64() * 1000.0);
         
-        println!("Sample {}: Witness {:.2} ms | Prove {:.2} ms", 
+        println!("Sample {}: Witness Generation {:.2} ms | Total Proving Time (incl. Witness) {:.2} ms", 
             i + 1, 
             witness_duration.as_secs_f64() * 1000.0,
             prove_duration.as_secs_f64() * 1000.0

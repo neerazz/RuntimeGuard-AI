@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "src/attestor",
+    "src/inline"
+]
+resolver = "2"
