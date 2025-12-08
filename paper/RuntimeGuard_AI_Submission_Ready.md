@@ -6,7 +6,7 @@
 
 **Affiliation:** Independent Researcher, California, USA*
 
-*\* I am an employee of Meta Platforms, Inc. This work was conducted independently and is not affiliated with Meta.*
+*\* The author is an employee of Meta Platforms, Inc. This work was conducted independently and is not affiliated with Meta.*
 
 **Repository:** https://github.com/neerazz/RuntimeGuard-AI/tree/release-v2
 
@@ -14,11 +14,11 @@
 
 ## Abstract
 
-The EU AI Act (Regulation 2024/1689) imposes strict transparency and human oversight obligations on high-risk AI systems, specifically under Article 14. However, a critical technical gap exists: current governance mechanisms either rely on static pre-deployment audits that fail to capture dynamic runtime behavior, or they introduce unacceptable latency penalties that render them unusable in production environments. I present **RuntimeGuard-AI**, an asynchronous governance architecture that separates lightweight inline policy enforcement from batch cryptographic attestation.
+The EU AI Act (Regulation 2024/1689) imposes strict transparency and human oversight obligations on high-risk AI systems, specifically under Article 14. However, a critical technical gap exists: current governance mechanisms either rely on static pre-deployment audits that fail to capture dynamic runtime behavior, or they introduce unacceptable latency penalties that render them unusable in production environments. This paper presents **RuntimeGuard-AI**, an asynchronous governance architecture that separates lightweight inline policy enforcement from batch cryptographic attestation.
 
-My design fundamentally resolves the tension between compliance and performance. By decoupling the critical inference path from the heavy cryptographic machinery required for proofs, I achieve a median latency overhead of just **2.3–4.1%**, while enabling cryptographically rigorous, tamper-evident audit trails. Theoretically, I formalize the property of *Latency Separation* and prove that my architecture satisfies it. Empirically, I implement a complete Zero-Knowledge (ZK) attestation pipeline using the Groth16 proving system on the `bls12-381` curve. I measure a witness generation time of **62 ms** and a total proving time of **1,389 ms** for 50,000 constraints on a standard CPU. These results confirm that while the cryptographic cost of compliance is high, it can be successfully removed from the user-facing critical path.
+Our design fundamentally resolves the tension between compliance and performance. By decoupling the critical inference path from the heavy cryptographic machinery required for proofs, we achieve a median latency overhead of just **2.3–4.1%**, while enabling cryptographically rigorous, tamper-evident audit trails. Theoretically, we formalize the property of *Latency Separation* and prove that our architecture satisfies it. Empirically, we implement a complete Zero-Knowledge (ZK) attestation pipeline using the Groth16 proving system on the `bls12-381` curve. We measure a witness generation time of **62 ms** and a total proving time of **1,389 ms** for 50,000 constraints on a standard CPU. These results confirm that while the cryptographic cost of compliance is high, it can be successfully removed from the user-facing critical path.
 
-This paper provides the first open-source reference implementation of a compliance architecture designed specifically for Article 14. I contribute: (1) a formalized threat model for AI auditing, (2) the *RuntimeGuard* protocol for sharded Merkle compliance logging, and (3) a systematic evaluation demonstrating that rigorous regulatory compliance is achievable at scale without compromising the user experience.
+To our knowledge, this paper provides the first open-source reference implementation of a compliance architecture designed specifically for Article 14. We contribute: (1) a formalized threat model for AI auditing, (2) the *RuntimeGuard* protocol for sharded Merkle compliance logging, and (3) a systematic evaluation demonstrating that rigorous regulatory compliance is achievable at scale without compromising the user experience.
 
 **Keywords:** EU AI Act, Article 14, Human Oversight, Zero-Knowledge Proofs, Groth16, Merkle Trees, Compliance Engineering
 
@@ -37,12 +37,12 @@ A fundamental technical challenge blocks the adoption of meaningful runtime over
 - **Requirement B:** To be usable, AI systems must respond in milliseconds.
 - **Conflict:** Generating a cryptographic proof (e.g., a digital signature or a ZK-SNARK) is computationally expensive. As my benchmarks show, a robust ZK proof takes over 1 second to generate. Blocking the user's request for 1 second to generate a "compliance certificate" is commercially non-viable.
 
-### 1.3 My Solution: RuntimeGuard-AI
-I propose **RuntimeGuard-AI**, an architecture that resolves this paradox through **asynchrony**. I treat compliance not as a synchronous gate, but as an eventually consistent, tamper-evident state. My system splits the lifecycle of a request into two independent paths:
+### 1.3 Our Solution: RuntimeGuard-AI
+We propose **RuntimeGuard-AI**, an architecture that resolves this paradox through **asynchrony**. We treat compliance not as a synchronous gate, but as an eventually consistent, tamper-evident state. Our system splits the lifecycle of a request into two independent paths:
 1.  **The Critical Path (<10ms):** A lightweight Rust-based policy engine enforces "hard" rules (e.g., "Block PII") and commits the transaction to a local, append-only log.
 2.  **The Attestation Path (Background):** An asynchronous "Attestor" service consumes these logs, aggregates them into Merkle Trees, and generates Zero-Knowledge proofs that attest to the integrity of the log and the correct application of policies.
 
-In this paper, I demonstrate that this approach is the *only* viable path to scaling Article 14 compliance. I provide a complete formalization, a reference implementation, and a comprehensive evaluation.
+In this paper, we demonstrate that this approach is the *only* viable path to scaling Article 14 compliance. We provide a complete formalization, a reference implementation, and a comprehensive evaluation.
 
 ---
 
@@ -51,7 +51,7 @@ In this paper, I demonstrate that this approach is the *only* viable path to sca
 To understand why RuntimeGuard-AI is designed as it is, one must understand both the specific legal requirements of the EU AI Act and the cryptographic primitives available to satisfy them.
 
 ### 2.1 The Legal Mandate: Article 14
-Article 14 of the EU AI Act ("Human Oversight") is the cornerstone of my design. Paragraph 4 states:
+Article 14 of the EU AI Act ("Human Oversight") is the cornerstone of our design. Paragraph 4 states:
 > *"High-risk AI systems shall be designed ... to enable natural persons to whom human oversight is assigned to ... correctly interpret the high-risk AI system’s output"* and *"decide not to use the high-risk AI system or otherwise disregard, override or reverse the output."* [3]
 
 **Recital 73** further clarifies the scope of human oversight:
@@ -68,24 +68,29 @@ Figure 2 illustrates the regulatory timeline that creates urgency for technical 
 ![Figure 2: EU AI Act Implementation Timeline](figures/eu_ai_act_timeline.png)
 
 ### 2.2 Mathematical Primer: Zero-Knowledge Proofs (Groth16)
-I utilize **zk-SNARKs** (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) to prove that the logs have not been tampered with. Specifically, I use the **Groth16** protocol [11], which offers the smallest proof size (128 bytes) and fastest verification time (~3ms), making it ideal for on-chain or low-resource verification.
+We utilize **zk-SNARKs** (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) to prove that the logs have not been tampered with. Specifically, we use the **Groth16** protocol [11], which offers the smallest proof size (128 bytes) and fastest verification time (~3ms), making it ideal for on-chain or low-resource verification.
 
-The core of Groth16 relies on **Elliptic Curve Pairings**. Let $\mathbb{G}_1$ and $\mathbb{G}_2$ be cyclic groups of prime order $r$, and $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ be a bilinear map. The computation we wish to verify is expressed as a Rank-1 Constraint System (R1CS), where for a vector of secret witnesses $\vec{w}$ and public inputs $\vec{x}$, we must satisfy:
-$$ (A \cdot \vec{z}) \circ (B \cdot \vec{z}) = (C \cdot \vec{z}) $$
-where $\vec{z} = (\vec{x}, 1, \vec{w})$ and $\circ$ is the Hadamard product. The prover generates $\pi$, and the verifier checks an equation of the form:
-$$ e(A, B) = e(\alpha, \beta) \cdot e(C, \delta) \cdot e(\pi, \gamma) $$
-If this equality holds, the verifier is convinced that the prover knows a valid witness $\vec{w}$ (i.e., the correct log entries) that satisfies the compliance policies, without revealing the sensitive user data in the log itself.
+The core of Groth16 relies on **Elliptic Curve Pairings**. Let G1 and G2 be cyclic groups of prime order *r*, and *e* : G1 × G2 → GT be a bilinear map. The computation we wish to verify is expressed as a Rank-1 Constraint System (R1CS), where for a vector of secret witnesses *w* and public inputs *x*, we must satisfy:
+
+    (A · z) ◦ (B · z) = (C · z)
+
+where *z* = (*x*, 1, *w*) and ◦ is the Hadamard product. The prover generates π, and the verifier checks an equation of the form:
+
+    e(A, B) = e(α, β) · e(C, δ) · e(π, γ)
+
+If this equality holds, the verifier is convinced that the prover knows a valid witness *w* (i.e., the correct log entries) that satisfies the compliance policies, without revealing the sensitive user data in the log itself.
 
 ### 2.3 Merkle Trees for Inclusion Proofs
-To aggregate millions of requests efficiently, I use **Merkle Trees**. A Merkle Tree is a binary tree where every leaf node is the hash of a data block (a compliance record), and every non-leaf node is the hash of its children:
-$$ H_{parent} = \text{SHA256}(H_{left} || H_{right}) $$
-The **Merkle Root** serves as a unique cryptographic fingerprint for the entire dataset. To prove that a specific request $r$ is in the log, I provide an **Inclusion Proof**: the path of hashes from the leaf $r$ to the root. This allows an auditor to verify the existence of a single record in $O(\log n)$ time, without downloading the full terabyte-scale log.
+To aggregate millions of requests efficiently, we use **Merkle Trees**. A Merkle Tree is a binary tree where every leaf node is the hash of a data block (a compliance record), and every non-leaf node is the hash of its children:
+
+    H_parent = SHA256(H_left || H_right)
+The **Merkle Root** serves as a unique cryptographic fingerprint for the entire dataset. To prove that a specific request $r$ is in the log, we provide an **Inclusion Proof**: the path of hashes from the leaf $r$ to the root. This allows an auditor to verify the existence of a single record in $O(\log n)$ time, without downloading the full terabyte-scale log.
 
 ---
 
 ## 3. Formal Foundations
 
-In this section, I formalize the security properties of RuntimeGuard-AI. I define the system model and provide proofs for the three key theorems sketched in the initial draft.
+In this section, we formalize the security properties of RuntimeGuard-AI. We define the system model and provide proofs for the three key theorems sketched in the initial draft.
 
 ### 3.1 System Model Definitions
 Let $\mathcal{T}$ be the set of timestamps.
@@ -157,7 +162,7 @@ Thus, we satisfy the property of practical completeness. **Q.E.D.**
 
 ## 4. Threat Model
 
-To effectively interpret my security guarantees, one must clearly define the adversary.
+To effectively interpret our security guarantees, one must clearly define the adversary.
 
 ### 4.1 Adversarial Goals
 1.  **Evasion:** The adversary wants to pass a non-compliant request (e.g., a "Jailbreak" prompt) without it being detected or logged.
@@ -165,7 +170,7 @@ To effectively interpret my security guarantees, one must clearly define the adv
 3.  **Revision:** The adversary wants to delete a past incriminating record.
 
 ### 4.2 Adversary Classes
-I define three distinct classes of adversaries:
+We define three distinct classes of adversaries:
 
 #### Class A: The Malicious User (External)
 - **Capability:** Can send arbitrary HTTP requests. Can collude with other users.
@@ -186,7 +191,7 @@ I define three distinct classes of adversaries:
 
 ## 5. System Architecture
 
-My architecture implements the "Two-Path" design principle.
+Our architecture implements the "Two-Path" design principle.
 
 ### 5.1 Architecture Overview
 Figure 1 (Architecture Diagram) illustrates the data flow.
@@ -233,15 +238,15 @@ impl PolicyEngine {
     }
 }
 ```
-*Crucial Design Detail:* The use of `try_send` is deliberate. A standard `await send` would couple the inference latency to the queue depth (Theorem 1 violation). By using `try_send`, I apply backpressure to the *logging* subsystem without slowing down the *inference*.
+*Crucial Design Detail:* The use of `try_send` is deliberate. A standard `await send` would couple the inference latency to the queue depth (Theorem 1 violation). By using `try_send`, we apply backpressure to the *logging* subsystem without slowing down the *inference*.
 
 ### 5.3 Component 2: The Batch Attestor & Circuit
-The ZK Attestor runs as a background daemon. I use the `arkworks` ecosystem for the ZK implementation.
+The ZK Attestor runs as a background daemon. We use the `arkworks` ecosystem for the ZK implementation.
 
 **The Compliance Circuit:**
 The circuit proves the statement: *"I know a set of records $R$ such that $Merkle(R) = Root_{pub}$ AND for all $r \in R$, $Policy(r) = \text{Valid}$."*
 
-Writing this loop in a ZK circuit is expensive. My implementation simulates the cost using an iterated hashing constraint system to benchmark the overhead realistically:
+Writing this loop in a ZK circuit is expensive. Our implementation simulates the cost using an iterated hashing constraint system to benchmark the overhead realistically:
 
 ```rust
 // Simplified Circuit Logic in 'src/attestor/circuit.rs'
@@ -266,7 +271,7 @@ fn generate_constraints(self, cs: ConstraintSystemRef) {
 ```
 
 ### 5.4 Sharded Merkle Ledger
-To handle high throughput (e.g., 10k RPS), a single Merkle Tree is a bottleneck. I implement a **Sharded Forest**.
+To handle high throughput (e.g., 10k RPS), a single Merkle Tree is a bottleneck. We implement a **Sharded Forest**.
 - The traffic is divided into $N$ shards.
 - Each shard maintains its own independent Merkle Tree.
 - At the end of an epoch (e.g., 1 minute), the roots of the $N$ shards are aggregated into a "Super-Root".
@@ -278,7 +283,7 @@ This allows parallel proof generation across multiple cores or GPUs (future work
 
 ## 6. Evaluation
 
-I evaluated RuntimeGuard-AI to answer three questions:
+We evaluated RuntimeGuard-AI to answer three questions:
 1.  **Overhead:** Does the inline engine respect the $<10ms$ budget? (Theorem 1 verification)
 2.  **Throughput:** Can the asynchronous attestor keep up with high load?
 3.  **Cost:** Is the cryptographic overhead economically viable?
@@ -286,10 +291,10 @@ I evaluated RuntimeGuard-AI to answer three questions:
 ### 6.1 Experimental Setup
 **Hardware:**
 - **Inference Node:** AMD EPYC 7763, 128GB RAM (Simulating an inference server).
-- **Attestation Node:** Standard consumer workstation (Intel i7-13700K, 32GB RAM). Note: I intentionally ran benchmarks on a CPU to establish a lower bound for performance. Production deployments would utilize GPU acceleration.
+- **Attestation Node:** Standard consumer workstation (Intel i7-13700K, 32GB RAM). Note: We intentionally ran benchmarks on a CPU to establish a lower bound for performance. Production deployments would utilize GPU acceleration.
 
 **Dataset:**
-I generated a synthetic dataset of 3.2 million request/response pairs, mimicking a mix of Chat (variable length), Completion (short), and Embedding (high volume) workloads.
+We generated a synthetic dataset of 3.2 million request/response pairs, mimicking a mix of Chat (variable length), Completion (short), and Embedding (high volume) workloads.
 
 ### 6.2 Microbenchmark: ZK Proving Performance
 The ZK proof generation is the most computationally expensive operation. Figure 3 shows the relationship between constraint count and proving time.
@@ -306,7 +311,7 @@ The ZK proof generation is the most computationally expensive operation. Figure 
 - **FFT/MSM Dominance:** The remaining ~1300ms is consumed by Fast Fourier Transforms (FFT) and Multi-Scalar Multiplications (MSM) over the elliptic curve. This confirms that offloading is mandatory; a 1.4s blockage would destroy the user experience.
 
 ### 6.3 Macrobenchmark: End-to-End Latency
-To verify Theorem 1 (Latency Separation), I measured the P50 and P99 latency of the mock inference service with and without the `InlinePolicyEngine`.
+To verify Theorem 1 (Latency Separation), we measured the P50 and P99 latency of the mock inference service with and without the `InlinePolicyEngine`.
 
 ![Figure 4: Inline Latency Overhead Histogram](figures/latency_hist.png)
 
@@ -317,7 +322,7 @@ The results demonstrate a median overhead of **2.3% to 4.1%** across workloads.
 This minimal overhead confirms that the `try_send` mechanism successfully isolates the extensive cryptographic work from the hot path.
 
 ### 6.4 Throughput Scalability
-I measured the maximum sustainable throughput of the `InlinePolicyEngine` under increasing load. Figure 5 demonstrates that the system maintains linear scalability up to 10,000 requests per second on a single node.
+We measured the maximum sustainable throughput of the `InlinePolicyEngine` under increasing load. Figure 5 demonstrates that the system maintains linear scalability up to 10,000 requests per second on a single node.
 
 ![Figure 5: Throughput Scalability](figures/throughput.png)
 
@@ -331,13 +336,13 @@ A critical concern for long-running compliance systems is storage. Figure 6 show
 Due to the logarithmic nature of Merkle Trees, even after processing 1 billion records, the tree depth remains manageable (~30 levels). This confirms the architecture's suitability for long-term auditability.
 
 ### 6.6 The Frontier of Acceleration: GPU vs FPGA
-While my reference implementation uses CPU-based proving, the future of runtime compliance lies in hardware acceleration. The bottleneck in Groth16 is the **Multi-Scalar Multiplication (MSM)**, which is embarrassingly parallel.
+While our reference implementation uses CPU-based proving, the future of runtime compliance lies in hardware acceleration. The bottleneck in Groth16 is the **Multi-Scalar Multiplication (MSM)**, which is embarrassingly parallel.
 - **GPU Acceleration:** Libraries like **ICICLE** (by Ingonyama) utilize CUDA cores to accelerate MSMs. Preliminary benchmarks on an NVIDIA RTX 4090 indicate a **5-10x speedup**, potentially reducing the batch proving time from ~1400ms to <200ms.
 - **FPGA Acceleration:** Field-Programmable Gate Arrays offer better energy efficiency (Joules/Proof). For high-scale datacenters processing millions of tokens per second, custom FPGA logic for the Elliptic Curve operations will likely be necessary to keep power budgets neutral.
 RuntimeGuard-AI is designed to be "Hardware Agnostic"—the `BatchAttestor` can be swapped for a GPU-accelerated version without changing the core protocol or the Inline Policy Engine.
 
 ### 6.7 Systematic Comparison: Beyond "Observability"
-How does RuntimeGuard-AI compare to the existing ecosystem of AI tools? I contrast it with three dominant paradigms.
+How does RuntimeGuard-AI compare to the existing ecosystem of AI tools? We contrast it with three dominant paradigms.
 
 #### 6.7.1 vs. Datadog / Splunk (Observability)
 Traditional observability tools are optimized for **availability** and **debugging**. They ingest logs via UDP or non-blocking TCP.
@@ -347,18 +352,18 @@ Traditional observability tools are optimized for **availability** and **debuggi
 #### 6.7.2 vs. LangChain / Guardrails AI (Orchestration)
 Libraries like Guardrails AI provide excellent input validation ("validators").
 - **The Gap:** These run purely in the application memory. A developer can verify the guardrail locally, but cannot *prove* to a third-party regulator that the guardrail ran 6 months ago on a specific request.
-- **RuntimeGuard Difference:** RuntimeGuard wraps these validators in a **Commitment Scheme**. I take the boolean result of the Guardrails check and anchor it in a Merkle Tree.
+- **RuntimeGuard Difference:** RuntimeGuard wraps these validators in a **Commitment Scheme**. We take the boolean result of the Guardrails check and anchor it in a Merkle Tree.
 
 #### 6.7.3 vs. Full TEEs (Confidential Computing)
 Running the entire model in an SGX enclave (e.g., Anjuna, Fortanix) offers the highest security.
 - **The Gap:** The performance penalty of TEEs (memory encryption overhead, limited EPC) makes them prohibitively expensive for large LLMs (70B+ parameters).
-- **RuntimeGuard Difference:** I apply the "Hybrid" approach: Keep the heavy model on standard GPUs, but put the lightweight *Policy Engine* and *Attestor* into TEEs (future work). This gives us TEE-grade integrity for the *audit trail* without the TEE performance tax on the *inference*.
+- **RuntimeGuard Difference:** We apply the "Hybrid" approach: Keep the heavy model on standard GPUs, but put the lightweight *Policy Engine* and *Attestor* into TEEs (future work). This gives us TEE-grade integrity for the *audit trail* without the TEE performance tax on the *inference*.
 
 ### 6.8 Cost Analysis: The "Compliance Tax"
-Regulatory compliance inevitably adds cost. I estimate the "Compliance Tax" per 1,000 tokens.
+Regulatory compliance inevitably adds cost. We estimate the "Compliance Tax" per 1,000 tokens.
 - **Compute Cost:** On AWS Lambda (for the Policy Engine), 1ms of execution costs negligible amounts.
 - **Proving Cost:** Calculating a Groth16 proof requires ~1.4 CPU-seconds.
-- **Batching Savings:** By batching 100 requests into a single Merkle Tree and proving the Root, I amortize the proof cost.
+- **Batching Savings:** By batching 100 requests into a single Merkle Tree and proving the Root, we amortize the proof cost.
     - Cost per proof: \$0.00005 (EC2 spot).
     - Batch size: 100.
     - **Cost per Request:** \$0.0000005.
@@ -368,7 +373,7 @@ This represents a $<0.01\%$ cost increase for typical GPT-4 API calls, making it
 
 ## 7. Case Study: High-Risk Recruitment AI
 
-To demonstrate the practical application of RuntimeGuard-AI, I present a hypothetical deployment scenario for a **Recruitment AI**, classified as "High Risk" under **Annex III** of the EU AI Act.
+To demonstrate the practical application of RuntimeGuard-AI, we present a hypothetical deployment scenario for a **Recruitment AI**, classified as "High Risk" under **Annex III** of the EU AI Act.
 
 ### 7.1 Scenario Definition
 - **System:** `ResumeScreener-v1`, an LLM processing job applications.
@@ -403,7 +408,9 @@ Six months later, an auditor investigates a bias complaint.
 
 ## 8. Operational Best Practices
 
-Based on my development experience, I offer the following guidelines for operationalizing RuntimeGuard-AI.
+## 8. Operational Best Practices
+
+Based on our development experience, we offer the following guidelines for operationalizing RuntimeGuard-AI.
 
 ### 8.1 "Tip 1: Tune Your Batch Size"
 The batch size ($\Delta$) determines the tradeoff between "Time to Finality" and "Cost".
@@ -425,7 +432,9 @@ The ZK Proving Key is a "toxic waste" artifact (for Groth16). If leaked, an atta
 
 ### 9.1 From "Trust Me" to "Verify Me"
 Society is moving from a paradigm of *Institutional Trust* (trusting OpenAI because they are a big company) to *Cryptographic Trust* (trusting the math). RuntimeGuard-AI accelerates this transition. By making compliance mathematically provable, the burden on regulators is reduced and public confidence is increased.
-This shift has profound economic implications. Currently, the "Cost of Verification" is high—regulators must hire expensive human auditors to interview engineering teams and review code that might not even be running in production. RuntimeGuard-AI drives the marginal cost of verification toward zero. When verification is cheap, it becomes ubiquitous. I foresee a future where "Verified Inference" is the standard, much like "HTTPS" is the standard for web traffic.
+### 9.1 From "Trust Me" to "Verify Me"
+Society is moving from a paradigm of *Institutional Trust* (trusting OpenAI because they are a big company) to *Cryptographic Trust* (trusting the math). RuntimeGuard-AI accelerates this transition. By making compliance mathematically provable, the burden on regulators is reduced and public confidence is increased.
+This shift has profound economic implications. Currently, the "Cost of Verification" is high—regulators must hire expensive human auditors to interview engineering teams and review code that might not even be running in production. RuntimeGuard-AI drives the marginal cost of verification toward zero. When verification is cheap, it becomes ubiquitous. We foresee a future where "Verified Inference" is the standard, much like "HTTPS" is the standard for web traffic.
 
 ### 9.2 The Paradox of Automation and Human Oversight
 Psychological research (e.g., Bainbridge, 1983) suggests the "Paradox of Automation": the more reliable the system, the less effective the human overseer becomes due to complacency.
@@ -438,7 +447,9 @@ The next frontier of research is **Formal Verification of Natural Language Polic
 
 ### 9.4 Environmental Considerations
 Training AI models is energy-intensive; adding ZK Proof generation adds another layer of computation. Is this sustainable?
-My cost analysis suggests the overhead is negligible (<1%). Furthermore, by enabling trust in *smaller*, specialized models (which are checked by RuntimeGuard policies), we may reduce the reliance on massive, energy-hungry General Purpose models. Thus, rigorous compliance functionality could paradoxically *reduce* the total carbon footprint of the AI ecosystem by enabling the safe deployment of lighter-weight models.
+### 9.4 Environmental Considerations
+Training AI models is energy-intensive; adding ZK Proof generation adds another layer of computation. Is this sustainable?
+Our cost analysis suggests the overhead is negligible (<1%). Furthermore, by enabling trust in *smaller*, specialized models (which are checked by RuntimeGuard policies), we may reduce the reliance on massive, energy-hungry General Purpose models. Thus, rigorous compliance functionality could paradoxically *reduce* the total carbon footprint of the AI ecosystem by enabling the safe deployment of lighter-weight models.
 
 ---
 
@@ -462,7 +473,7 @@ RuntimeGuard-AI builds upon and differentiates itself from several active resear
 **ISO/IEC 42001:** The emerging AI Management System standard requires documented evidence of AI governance. RuntimeGuard's tamper-evident logs directly satisfy the "records" requirement of such management systems.
 
 ### 10.4 Cryptographic Logging
-**Certificate Transparency (RFC 6962) [10]:** My use of Merkle Trees is directly inspired by CT. However, CT is for *static* certificates. RuntimeGuard extends CT to *dynamic* runtime events with the additional complexity of proving policy execution, not just existence.
+**Certificate Transparency (RFC 6962) [10]:** Our use of Merkle Trees is directly inspired by CT. However, CT is for *static* certificates. RuntimeGuard extends CT to *dynamic* runtime events with the additional complexity of proving policy execution, not just existence.
 
 **Binary Transparency (Google):** Similar to CT but for software binaries. RuntimeGuard applies the same principles to AI inference decisions.
 
@@ -483,17 +494,17 @@ RuntimeGuard-AI builds upon and differentiates itself from several active resear
 
 ## 11. Conclusion
 
-The EU AI Act presents a dilemma: how to mandate human oversight without breaking the speed of modern AI. I have presented **RuntimeGuard-AI**, an architecture that solves this not through policy, but through topology. By creating a distinct, asynchronous cryptographic plane for compliance, I have shown that we can have our cake (low latency) and eat it too (rigorous accountability).
+The EU AI Act presents a dilemma: how to mandate human oversight without breaking the speed of modern AI. We have presented **RuntimeGuard-AI**, an architecture that solves this not through policy, but through topology. By creating a distinct, asynchronous cryptographic plane for compliance, we have shown that we can have our cake (low latency) and eat it too (rigorous accountability).
 
-My architecture is grounded in formal proofs of Latency Separation and Tamper-Evidence. My reference implementation proves the viability of the approach on commodity hardware. While challenges remain—specifically around the "Oracle Problem" and key management—RuntimeGuard-AI represents a concrete step toward a future where AI safety is not just a promise, but a mathematical proof.
+Our architecture is grounded in formal proofs of Latency Separation and Tamper-Evidence. Our reference implementation proves the viability of the approach on commodity hardware. While challenges remain—specifically around the "Oracle Problem" and key management—RuntimeGuard-AI represents a concrete step toward a future where AI safety is not just a promise, but a mathematical proof.
 
 ### 11.1 Limitations and Future Work
 
 **The Oracle Problem:** RuntimeGuard-AI proves that policies were *executed*, not that they were *correct* or *complete*. A poorly designed policy (e.g., one that misses a jailbreak vector) will be faithfully enforced but will not catch the violation. Future work should explore formal verification of natural language policies.
 
-**Trusted Setup Ceremony:** Groth16 requires a one-time trusted setup. If the "toxic waste" from this ceremony is not properly destroyed, an attacker can forge proofs. I recommend using established multi-party computation (MPC) ceremonies like Zcash's "Powers of Tau" or running a private ceremony with external auditors.
+**Trusted Setup Ceremony:** Groth16 requires a one-time trusted setup. If the "toxic waste" from this ceremony is not properly destroyed, an attacker can forge proofs. We recommend using established multi-party computation (MPC) ceremonies like Zcash's "Powers of Tau" or running a private ceremony with external auditors.
 
-**Groth16 vs Modern Alternatives:** My implementation uses Groth16 for its small proof size. However, newer systems like **Plonky2** (Polygon), **Halo2** (Zcash), and **STARKs** (StarkWare) offer transparent setups (no toxic waste) at the cost of larger proofs. Future versions of RuntimeGuard could support these alternatives for organizations with stricter key management requirements.
+**Groth16 vs Modern Alternatives:** Our implementation uses Groth16 for its small proof size. However, newer systems like **Plonky2** (Polygon), **Halo2** (Zcash), and **STARKs** (StarkWare) offer transparent setups (no toxic waste) at the cost of larger proofs. Future versions of RuntimeGuard could support these alternatives for organizations with stricter key management requirements.
 
 | Proving System | Trusted Setup? | Proof Size | Verification Time |
 |:---|:---:|:---:|:---:|
@@ -504,7 +515,7 @@ My architecture is grounded in formal proofs of Latency Separation and Tamper-Ev
 
 **Privacy Leakage:** While ZK proofs hide the *content* of logs, the *metadata* (timing, volume, batch sizes) may leak information. A sophisticated adversary could infer usage patterns. Future work should analyze differential privacy guarantees.
 
-**Scalability Ceiling:** The current CPU-based implementation tops out at ~1400 proofs/second (assuming 1s proving time). For hyperscale deployments (10M+ requests/hour), GPU or FPGA acceleration is mandatory. I have designed the architecture to be hardware-agnostic, but this acceleration is not yet implemented.
+**Scalability Ceiling:** The current CPU-based implementation tops out at ~1400 proofs/second (assuming 1s proving time). For hyperscale deployments (10M+ requests/hour), GPU or FPGA acceleration is mandatory. We have designed the architecture to be hardware-agnostic, but this acceleration is not yet implemented.
 
 ---
 
@@ -550,7 +561,7 @@ My architecture is grounded in formal proofs of Latency Separation and Tamper-Ev
 
 ## Appendix A: System Configuration & Reproducibility
 
-To ensure reproducibility of my results, I provide the exact configuration used for the evaluation.
+To ensure reproducibility of our results, we provide the exact configuration used for the evaluation.
 
 ### A.1 Component Versions
 - **Rust:** `v1.75.0` (nightly)
@@ -701,26 +712,30 @@ Every log entry adheres to the following flattened schema to ensure canonical se
 
 ## Appendix D: Circuit Constraints Breakdown
 
-For the mathematically inclined auditor, I detail the exact constraints enforced by the ZK Circuit.
+For the mathematically inclined auditor, we detail the exact constraints enforced by the ZK Circuit.
 
 ### D.1 Constraint 1: The Merkle Integrity
-For each level $i$ from 0 to $Depth$:
-$$ (1 - d_i) \cdot (H_{sibling} - H_{current}) = L_i - H_{current} $$
-$$ d_i \cdot (H_{current} - H_{sibling}) = R_i - H_{sibling} $$
-$$ H_{parent} = \text{Poseidon}(L_i, R_i) $$
-Where $d_i$ is the direction bit (0=left, 1=right).
+For each level *i* from 0 to *Depth*:
+
+    (1 - d_i) · (H_sibling - H_current) = L_i - H_current
+    d_i · (H_current - H_sibling) = R_i - H_sibling
+    H_parent = Poseidon(L_i, R_i)
+
+Where *d_i* is the direction bit (0=left, 1=right).
 
 ### D.2 Constraint 2: The Policy Threshold
-To prove that a risk score $S$ is below a threshold $T$ without revealing $S$:
-1.  Compute difference $\delta = T - S$.
-2.  Decompose $\delta$ into bits $b_0, \dots, b_{31}$.
-3.  Enforce booleanity: $b_i \cdot (1 - b_i) = 0$.
-4.  Re-pack: $\sum 2^i b_i = \delta$.
-This ensures $\delta \ge 0$, and thus $S \le T$.
+To prove that a risk score *S* is below a threshold *T* without revealing *S*:
+1.  Compute difference δ = *T* - *S*.
+2.  Decompose δ into bits *b_0*, ..., *b_31*.
+3.  Enforce booleanity: *b_i* · (1 - *b_i*) = 0.
+4.  Re-pack: Σ (2^i · b_i) = δ.
+This ensures δ ≥ 0, and thus *S* ≤ *T*.
 
 ### D.3 Constraint 3: The Audit Trail Binding
 To prevent "detached" proofs, the circuit enforces that the public input equals the hash of the Merkle Root *and* the Policy Version:
-$$ \text{PublicInput} = \text{Poseidon}(Root, Version) $$
+
+    PublicInput = Poseidon(Root, Version)
+
 This binds the proof specifically to the version of the policy that was active, preventing "Downgrade Attacks" where an attacker validates a request against an older, looser policy.
 
 ---
