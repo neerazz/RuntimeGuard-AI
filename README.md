@@ -1,83 +1,70 @@
 # RuntimeGuard-AI
 
-**RuntimeGuard-AI** is a reference implementation for cryptographically attested AI oversight, designed to align with the **EU AI Act (Article 14)** requirements for high-risk AI systems.
+**RuntimeGuard-AI** is the official reference implementation for the research paper:
 
-It demonstrates a scalable, asynchronous architecture that separates **lightweight inline policy enforcement** from **computational heavy zero-knowledge (ZK) attestation**, ensuring that compliance does not degrade inference latency.
+> **"RuntimeGuard-AI: Scalable Tamper-Evident Accountability for High-Risk AI Systems Under the EU AI Act"**
+> *Submitted to USENIX Security 2026*
 
-## Architecture
+**Repository:** [https://github.com/neerazz/RuntimeGuard-AI](https://github.com/neerazz/RuntimeGuard-AI)
 
-The system is built on **Theorem 1: Latency Separation**, enabling the critical path to remain non-blocking regardless of the background attestation load.
+This repository provides the cryptographic attestation architecture described in the paper, designed to meet **Article 14 (Human Oversight)** requirements without compromising inference latency.
+
+## 📄 Research Paper
+
+The full manuscript and supplementary materials are available in the `paper/` directory:
+
+*   **[RuntimeGuard_AI_Paper.md](paper/RuntimeGuard_AI_Paper.md)**: The complete research paper (Markdown/LaTeX-ready).
+*   **[main.md](paper/main.md)**: Draft manuscript with detailed evaluation summary.
+*   **[research.md](paper/research.md)**: State-of-the-art analysis and novelty audit.
+
+## 🏗️ Repository Structure
+
+This project is strictly scoped to the artifacts described in the paper. Legacy experimental code has been removed.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        RuntimeGuard-AI Architecture                      │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
-│  │   AI Model   │───▶│   Inline     │───▶│   Response   │               │
-│  │              │    │   Policy     │    │   to User    │               │
-│  └──────────────┘    └──────┬───────┘    └──────────────┘               │
-│                             │ (Non-blocking Send)                        │
-│                             ▼                                            │
-│                      ┌──────────────┐                                   │
-│                      │ Shard Queue  │                                   │
-│                      └──────┬───────┘                                   │
-│                             │ (Async Drain)                              │
-│         ┌───────────────────┼───────────────────┐                       │
-│         │                   │                   │                       │
-│  ┌──────▼──────┐    ┌──────▼──────┐    ┌──────▼──────┐                 │
-│  │   Merkle    │    │     ZK      │    │  Oversight  │                 │
-│  │   Log       │    │   Prover    │    │   Service   │                 │
-│  └─────────────┘    └─────────────┘    └─────────────┘                 │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
+runtimeguard-ai/
+├── src/
+│   ├── inline/      # [Rust] Inline Policy Engine (Paper Appendix B.1)
+│   │                # Implements Theorem 1 (Latency Separation) via non-blocking fallback
+│   │
+│   └── attestor/    # [Rust] ZK Attestation Service (Paper Section 5.3)
+│                    # Benchmarks for Groth16 witness generation & proving
+│
+├── paper/           # Research manuscript and figures
+└── products/        # (Optional) Build artifacts
 ```
 
-### Core Components (Rust)
+## 🚀 Key Claims Validation
 
-*   **`src/inline`**: The high-performance Inline Policy Engine.
-    *   **Latency Separation**: Uses `tokio` channels and a fallback disk buffer to ensure `evaluate()` never blocks the inference thread.
-    *   **Policy Enforcement**: Evaluates requests against compliance rules (Article 14).
-*   **`src/attestor`**: The ZK Proving Service.
-    *   **Batch Attestation**: Aggregates logs and generates Groth16 proofs.
-    *   **Benchmarking**: Measured at **62ms** for witness generation and **1.4s** for total proving (50k constraints) on generic CPU.
+### 1. Latency Separation (Theorem 1)
+The **Inline Policy Engine** (`src/inline`) demonstrates how policy enforcement is decoupled from logging I/O.
+*   **Code:** `src/inline/src/engine.rs`
+*   **Mechanism:** Uses `tokio::spawn` to offload full-queue events to a disk buffer, ensuring the critical inference path never blocks.
 
-## Quickstart
+### 2. ZK Attestation Performance (Table 6)
+The **Attestor** (`src/attestor`) provides the benchmark harness to reproduce the paper's performance claims.
+*   **Claim:** ~62ms Witness Generation, ~1.4s Total Proving (50k constraints).
+*   **Run Benchmark:**
+    ```bash
+    cd src/attestor
+    cargo run --release --bin bench_prove -- --constraints 50000 --samples 10
+    ```
+
+## 🛠️ Quickstart
 
 ### Prerequisites
-- **Rust**: Latest stable (`rustup update`)
+*   **Rust**: Latest stable (`rustup update`)
 
-### Running the ZK Benchmark
-Validate the cryptographic performance on your machine:
-
+### Run Tests
 ```bash
-cd src/attestor
-cargo run --release --bin bench_prove -- --constraints 50000 --samples 5
-```
-
-### Running the Inline Engine Tests
-Verify the non-blocking behavior:
-
-```bash
+# Verify Inline Engine Logic
 cd src/inline
 cargo test
+
+# Verify Cryptographic Benchmarks
+cd ../attestor
+cargo run --release --bin bench_prove
 ```
 
-## Repository Structure
-
-*   `src/inline/` - Rust crate for the Inline Policy Engine.
-*   `src/attestor/` - Rust crate for ZK Attestation & Benchmarks.
-*   `src/oversight/` - Placeholder for Human-in-the-Loop oversight logic.
-*   `paper/` - The USENIX Security 2026 research paper and materials.
-*   `evaluation/` - Synthetic traces and analysis scripts.
-
-## Publication
-
-This code accompanies the paper:
-**"RuntimeGuard-AI: Scalable Tamper-Evident Accountability for High-Risk AI Systems Under the EU AI Act"**
-*Submitted to USENIX Security 2026*
-
-See `paper/main.md` for the full manuscript.
-
-## License
+## 📜 License
 MIT

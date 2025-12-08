@@ -1,0 +1,14 @@
+d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\deps\serde-e6cec3dc3d492b2f.d: C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\deps\libserde-e6cec3dc3d492b2f.rlib: C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\deps\libserde-e6cec3dc3d492b2f.rmeta: C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\bnira\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+d:\Projects\AI_POCs\RuntimeGuard-AI\src\attestor\target\release\build\serde-61dd1a266867dcef\out/private.rs:
+
+# env-dep:OUT_DIR=d:\\Projects\\AI_POCs\\RuntimeGuard-AI\\src\\attestor\\target\\release\\build\\serde-61dd1a266867dcef\\out

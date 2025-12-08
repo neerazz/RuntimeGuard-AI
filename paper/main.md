@@ -756,8 +756,8 @@ runtimeguard-ai/
 
 1. Clone repository and install dependencies:
 ```bash
-git clone https://github.com/[anonymized]/runtimeguard-ai
-cd runtimeguard-ai && ./scripts/setup.sh
+git clone https://github.com/neerazz/RuntimeGuard-AI
+cd RuntimeGuard-AI && cargo test
 ```
 
 2. Configure environment (edit `deploy/config.yaml`):
