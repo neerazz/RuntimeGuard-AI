@@ -54,7 +54,10 @@ To understand why RuntimeGuard-AI is designed as it is, one must understand both
 Article 14 of the EU AI Act ("Human Oversight") is the cornerstone of my design. Paragraph 4 states:
 > *"High-risk AI systems shall be designed ... to enable natural persons to whom human oversight is assigned to ... correctly interpret the high-risk AI system’s output"* and *"decide not to use the high-risk AI system or otherwise disregard, override or reverse the output."* [3]
 
-**Recital 73** further clarifies that oversight measures should be commensurate with the risks. This implies that for high-throughput systems, human oversight cannot mean "a human checks every request" (which is impossible at scale). Instead, it must mean "a human has a cryptographically verifiable guarantee that the system is operating within parameters, and can audit any specific anomaly."
+**Recital 73** further clarifies the scope of human oversight:
+> *"High-risk AI systems should be designed and developed in such a way that natural persons can oversee their functioning, ensure that they are used as intended and that their impacts are addressed over the system's lifecycle. [...] Appropriate human oversight measures should be identified by the provider of the system before its placing on the market."* [1]
+
+This implies that for high-throughput systems, human oversight cannot mean "a human checks every request" (which is impossible at scale). Instead, it must mean "a human has a cryptographically verifiable guarantee that the system is operating within parameters, and can audit any specific anomaly."
 
 RuntimeGuard-AI maps these legal concepts to technical requirements:
 - **"Correctly interpret":** Requires a tamper-evident record of the exact input and output (The Log).
@@ -336,17 +339,17 @@ RuntimeGuard-AI is designed to be "Hardware Agnostic"—the `BatchAttestor` can 
 ### 6.7 Systematic Comparison: Beyond "Observability"
 How does RuntimeGuard-AI compare to the existing ecosystem of AI tools? I contrast it with three dominant paradigms.
 
-#### 6.5.1 vs. Datadog / Splunk (Observability)
+#### 6.7.1 vs. Datadog / Splunk (Observability)
 Traditional observability tools are optimized for **availability** and **debugging**. They ingest logs via UDP or non-blocking TCP.
 - **The Gap:** They are *lossy* by design (sampling logs under load) and *mutable* (logs are deleted after retention periods).
 - **RuntimeGuard Difference:** RuntimeGuard provides **Cryptographic Finality**. A dropped log is not just a missing metric; it is a proof verification failure.
 
-#### 6.5.2 vs. LangChain / Guardrails AI (Orchestration)
+#### 6.7.2 vs. LangChain / Guardrails AI (Orchestration)
 Libraries like Guardrails AI provide excellent input validation ("validators").
 - **The Gap:** These run purely in the application memory. A developer can verify the guardrail locally, but cannot *prove* to a third-party regulator that the guardrail ran 6 months ago on a specific request.
 - **RuntimeGuard Difference:** RuntimeGuard wraps these validators in a **Commitment Scheme**. I take the boolean result of the Guardrails check and anchor it in a Merkle Tree.
 
-#### 6.5.3 vs. Full TEEs (Confidential Computing)
+#### 6.7.3 vs. Full TEEs (Confidential Computing)
 Running the entire model in an SGX enclave (e.g., Anjuna, Fortanix) offers the highest security.
 - **The Gap:** The performance penalty of TEEs (memory encryption overhead, limited EPC) makes them prohibitively expensive for large LLMs (70B+ parameters).
 - **RuntimeGuard Difference:** I apply the "Hybrid" approach: Keep the heavy model on standard GPUs, but put the lightweight *Policy Engine* and *Attestor* into TEEs (future work). This gives us TEE-grade integrity for the *audit trail* without the TEE performance tax on the *inference*.
@@ -441,16 +444,40 @@ My cost analysis suggests the overhead is negligible (<1%). Furthermore, by enab
 
 ## 10. Related Work
 
+RuntimeGuard-AI builds upon and differentiates itself from several active research streams.
+
 ### 10.1 Agentic Governance Frameworks
 **MI9 (Wang et al., 2025) [7]:** MI9 proposes a rich "Agency-Risk Index" and FSM-based conformance. However, MI9 is purely architectural—it lacks the cryptographic binding of RuntimeGuard. RuntimeGuard could be seen as the "Enforcement Layer" for MI9's "Policy Layer".
 
 **GaaS (Gaurav et al., 2025) [8]:** Governance-as-a-Service offers meaningful modularity but relies on centralized trust. RuntimeGuard improves on GaaS by making the audit trail decentralized and tamper-evident.
 
-### 10.2 Cryptographic Logging
-**Certificate Transparency (RFC 6962) [10]:** My use of Merkle Trees is directly inspired by CT. However, CT is for *static* certificates. RuntimeGuard extends CT to *dynamic* runtime events.
+### 10.2 Constitutional AI and Alignment Approaches
+**Constitutional AI (Bai et al., 2022):** Anthropic's approach embeds safety rules into model training via RLHF. This is a *prevention* strategy—making the model itself safer. RuntimeGuard is complementary: it is a *detection and attestation* strategy that works even when the model misbehaves. Constitutional AI cannot prove post-hoc that any specific interaction was safe; RuntimeGuard can.
 
-### 10.3 ZKML (Zero-Knowledge Machine Learning)
-**ZKML [13]:** Projects like EZKL focus on proving that the *matrix multiplication* was correct. RuntimeGuard focuses on proving that the *policy logic* was correct. These are complementary: a future system could use ZKML to prove the model inference and RuntimeGuard to prove the safety check.
+**TrustLLM (Sun et al., 2024) [16]:** TrustLLM provides comprehensive benchmarks for LLM trustworthiness across 8 dimensions. It measures; RuntimeGuard enforces. An organization could use TrustLLM to evaluate their model's baseline safety and RuntimeGuard to prove that safety policies are continuously applied in production.
+
+### 10.3 Regulatory Frameworks and Standards
+**NIST AI RMF (2023) [15]:** The NIST AI Risk Management Framework provides a comprehensive taxonomy of AI risks and governance practices. RuntimeGuard implements the "GOVERN" and "MANAGE" functions of the RMF by providing continuous monitoring and evidence generation capabilities.
+
+**ISO/IEC 42001:** The emerging AI Management System standard requires documented evidence of AI governance. RuntimeGuard's tamper-evident logs directly satisfy the "records" requirement of such management systems.
+
+### 10.4 Cryptographic Logging
+**Certificate Transparency (RFC 6962) [10]:** My use of Merkle Trees is directly inspired by CT. However, CT is for *static* certificates. RuntimeGuard extends CT to *dynamic* runtime events with the additional complexity of proving policy execution, not just existence.
+
+**Binary Transparency (Google):** Similar to CT but for software binaries. RuntimeGuard applies the same principles to AI inference decisions.
+
+### 10.5 ZKML (Zero-Knowledge Machine Learning)
+**ZKML [13]:** Projects like EZKL and Modulus Labs focus on proving the *computational integrity* of model inference—that the model weights were applied correctly to the input. Recent work like **zkLLM** [18] demonstrates that a 13-billion parameter LLM inference can be proven in under 15 minutes. RuntimeGuard focuses on proving that the *policy logic* was correctly executed. These are complementary: a future system could use ZKML to prove the model inference and RuntimeGuard to prove the safety check. The combined system would provide complete end-to-end verifiable AI.
+
+| System | Focus | Cryptographic? | Dynamic? | Open Source? |
+|:---|:---|:---:|:---:|:---:|
+| MI9 | Architecture | ❌ | ✅ | ❌ |
+| GaaS | Modularity | ❌ | ✅ | ❌ |
+| Constitutional AI | Training | ❌ | ❌ | ❌ |
+| TrustLLM | Benchmarking | ❌ | ❌ | ✅ |
+| Certificate Transparency | Static Logs | ✅ | ❌ | ✅ |
+| ZKML (EZKL) | Inference | ✅ | ❌ | ✅ |
+| **RuntimeGuard-AI** | **Policy Enforcement** | **✅** | **✅** | **✅** |
 
 ---
 
@@ -459,6 +486,25 @@ My cost analysis suggests the overhead is negligible (<1%). Furthermore, by enab
 The EU AI Act presents a dilemma: how to mandate human oversight without breaking the speed of modern AI. I have presented **RuntimeGuard-AI**, an architecture that solves this not through policy, but through topology. By creating a distinct, asynchronous cryptographic plane for compliance, I have shown that we can have our cake (low latency) and eat it too (rigorous accountability).
 
 My architecture is grounded in formal proofs of Latency Separation and Tamper-Evidence. My reference implementation proves the viability of the approach on commodity hardware. While challenges remain—specifically around the "Oracle Problem" and key management—RuntimeGuard-AI represents a concrete step toward a future where AI safety is not just a promise, but a mathematical proof.
+
+### 11.1 Limitations and Future Work
+
+**The Oracle Problem:** RuntimeGuard-AI proves that policies were *executed*, not that they were *correct* or *complete*. A poorly designed policy (e.g., one that misses a jailbreak vector) will be faithfully enforced but will not catch the violation. Future work should explore formal verification of natural language policies.
+
+**Trusted Setup Ceremony:** Groth16 requires a one-time trusted setup. If the "toxic waste" from this ceremony is not properly destroyed, an attacker can forge proofs. I recommend using established multi-party computation (MPC) ceremonies like Zcash's "Powers of Tau" or running a private ceremony with external auditors.
+
+**Groth16 vs Modern Alternatives:** My implementation uses Groth16 for its small proof size. However, newer systems like **Plonky2** (Polygon), **Halo2** (Zcash), and **STARKs** (StarkWare) offer transparent setups (no toxic waste) at the cost of larger proofs. Future versions of RuntimeGuard could support these alternatives for organizations with stricter key management requirements.
+
+| Proving System | Trusted Setup? | Proof Size | Verification Time |
+|:---|:---:|:---:|:---:|
+| Groth16 | Yes | 128 bytes | ~3 ms |
+| Plonky2 | No | ~45 KB | ~15 ms |
+| Halo2 | No | ~10 KB | ~10 ms |
+| STARKs | No | ~200 KB | ~50 ms |
+
+**Privacy Leakage:** While ZK proofs hide the *content* of logs, the *metadata* (timing, volume, batch sizes) may leak information. A sophisticated adversary could infer usage patterns. Future work should analyze differential privacy guarantees.
+
+**Scalability Ceiling:** The current CPU-based implementation tops out at ~1400 proofs/second (assuming 1s proving time). For hyperscale deployments (10M+ requests/hour), GPU or FPGA acceleration is mandatory. I have designed the architecture to be hardware-agnostic, but this acceleration is not yet implemented.
 
 ---
 
@@ -493,6 +539,12 @@ My architecture is grounded in formal proofs of Latency Separation and Tamper-Ev
 [14] L. Grassi et al., "Poseidon: A New Hash Function for Zero-Knowledge Proof Systems," USENIX Security 2021.
 
 [15] NIST, "AI Risk Management Framework (AI RMF 1.0)," NIST AI 100-1, 2023.
+
+[16] L. Sun, Y. Huang, et al., "TrustLLM: Trustworthiness in Large Language Models," Proc. 41st International Conference on Machine Learning (ICML), 2024. https://arxiv.org/abs/2401.05561
+
+[17] Y. Bai, S. Kadavath, et al., "Constitutional AI: Harmlessness from AI Feedback," arXiv:2212.08073, Dec. 2022. https://arxiv.org/abs/2212.08073
+
+[18] H. Sun, J. Zhu, et al., "zkLLM: Zero Knowledge Proofs for Large Language Models," arXiv:2404.16109, Apr. 2024. https://arxiv.org/abs/2404.16109
 
 ---
 

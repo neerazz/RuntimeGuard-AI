@@ -61,13 +61,38 @@ impl InlinePolicyEngine {
         (hasher.finish() as usize) % self.num_shards
     }
 
+    /// Real policy enforcement using regex-based blocklist.
+    /// Checks for PII patterns (SSN, credit cards) and profanity.
+    fn evaluate_blocklist(&self, prompt: &str) -> PolicyResult {
+        // SSN Pattern: XXX-XX-XXXX
+        let ssn_pattern = regex::Regex::new(r"\d{3}-\d{2}-\d{4}").unwrap();
+        if ssn_pattern.is_match(prompt) {
+            return PolicyResult::block("PII_DETECTED: SSN pattern found".to_string());
+        }
+
+        // Credit Card Pattern: 16 digits
+        let cc_pattern = regex::Regex::new(r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b").unwrap();
+        if cc_pattern.is_match(prompt) {
+            return PolicyResult::block("PII_DETECTED: Credit card pattern found".to_string());
+        }
+
+        // Profanity blocklist (simplified)
+        let blocklist = ["hack", "exploit", "bypass", "jailbreak"];
+        let prompt_lower = prompt.to_lowercase();
+        for word in blocklist {
+            if prompt_lower.contains(word) {
+                return PolicyResult::escalate(format!("SUSPICIOUS_CONTENT: '{}' detected", word));
+            }
+        }
+
+        PolicyResult::allow()
+    }
+
     pub async fn evaluate(&self, req: &InferenceRequest) -> PolicyResult {
         let start = std::time::Instant::now();
 
-        // 1. Evaluate Rules (Mock logic for now, as strict rule impl wasn't requested in detail, 
-        //    but the architecture was the focus)
-        //    In a real system, we'd iterate over self.rules here.
-        let result = PolicyResult::allow(); 
+        // 1. Evaluate Rules: Real policy logic using regex-based blocklist
+        let result = self.evaluate_blocklist(&req.prompt);
 
         // 2. Log Append with Backpressure Handling (Theorem 1)
         let shard_id = self.compute_shard(&req.id);

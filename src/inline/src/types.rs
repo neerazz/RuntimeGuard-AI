@@ -7,6 +7,7 @@ pub struct InferenceRequest {
     pub id: String,
     pub timestamp: DateTime<Utc>,
     pub model_id: String,
+    pub prompt: String,        // The actual user input for policy checking
     pub input_data: String,
     pub context: String,
     pub user_id: Option<String>,
@@ -32,6 +33,22 @@ impl PolicyResult {
             decision: Decision::Allowed,
             rules_triggered: vec![],
             confidence_score: 1.0,
+        }
+    }
+
+    pub fn block(reason: String) -> Self {
+        Self {
+            decision: Decision::Blocked,
+            rules_triggered: vec![reason],
+            confidence_score: 0.0,
+        }
+    }
+
+    pub fn escalate(reason: String) -> Self {
+        Self {
+            decision: Decision::Escalated,
+            rules_triggered: vec![reason],
+            confidence_score: 0.5,
         }
     }
 
