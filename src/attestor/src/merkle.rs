@@ -1,132 +1,134 @@
 use sha2::{Digest, Sha256};
 
-/// A Hash is a 32-byte SHA-256 output.
+/// SHA-256 hash type used throughout the Merkle tree.
 pub type Hash = [u8; 32];
 
-/// A Merkle Tree implementation for RuntimeGuard-AI compliance logs.
-/// 
-/// This structure is used to aggregate compliance records and generate
-/// tamper-evident Merkle Roots for ZK attestation (Paper Appendix B.2).
+const LEAF_DOMAIN: &[u8] = b"runtimeguard/merkle-leaf/v2";
+const NODE_DOMAIN: &[u8] = b"runtimeguard/merkle-node/v2";
+
+/// Domain-separated Merkle tree with duplicate-last handling for odd levels.
+#[derive(Debug, Clone)]
 pub struct MerkleTree {
     /// Internal storage of tree levels. Level 0 = leaves, Level n = root.
     levels: Vec<Vec<Hash>>,
+    leaf_count: usize,
 }
 
 impl MerkleTree {
-    /// Constructs a new Merkle Tree from a list of data blocks.
-    /// 
-    /// Each block is hashed using SHA-256 to form the leaves.
-    /// If the number of leaves is odd, the last leaf is duplicated.
+    /// Builds a Merkle tree from raw leaf data.
     pub fn from_data(data: &[&[u8]]) -> Self {
         if data.is_empty() {
-            return Self { levels: vec![vec![]] };
+            return Self {
+                levels: vec![vec![]],
+                leaf_count: 0,
+            };
         }
 
-        // Hash all data blocks to form leaves
-        let mut leaves: Vec<Hash> = data
-            .iter()
-            .map(|block| {
-                let mut hasher = Sha256::new();
-                hasher.update(block);
-                hasher.finalize().into()
-            })
-            .collect();
-
-        // Ensure even number of leaves
-        if leaves.len() % 2 != 0 {
-            leaves.push(*leaves.last().unwrap());
+        let leaf_count = data.len();
+        let mut leaves: Vec<Hash> = data.iter().map(|item| hash_leaf(item)).collect();
+        if leaves.len() % 2 == 1 {
+            leaves.push(*leaves.last().expect("non-empty leaves"));
         }
 
         let mut levels = vec![leaves];
-
-        // Build tree levels until we reach the root
-        while levels.last().unwrap().len() > 1 {
-            let current_level = levels.last().unwrap();
-            let mut next_level = Vec::with_capacity((current_level.len() + 1) / 2);
-
-            for chunk in current_level.chunks(2) {
-                let mut hasher = Sha256::new();
-                hasher.update(&chunk[0]);
-                if chunk.len() > 1 {
-                    hasher.update(&chunk[1]);
-                } else {
-                    hasher.update(&chunk[0]); // Duplicate for odd
-                }
-                next_level.push(hasher.finalize().into());
+        while levels.last().expect("at least one level").len() > 1 {
+            let current = levels.last().expect("at least one level");
+            let mut next = Vec::with_capacity(current.len().div_ceil(2));
+            for pair in current.chunks(2) {
+                let right = pair.get(1).unwrap_or(&pair[0]);
+                next.push(hash_node(&pair[0], right));
             }
-
-            levels.push(next_level);
+            levels.push(next);
         }
 
-        Self { levels }
+        Self { levels, leaf_count }
     }
 
-    /// Returns the Merkle Root (the hash at the top of the tree).
+    /// Returns the root hash, or `None` for an empty tree.
     pub fn root(&self) -> Option<Hash> {
-        self.levels.last().and_then(|level| level.first().copied())
+        self.levels.last().and_then(|level| level.first()).copied()
     }
 
-    /// Generates a Merkle Inclusion Proof for a specific leaf index.
-    /// 
-    /// The proof consists of the sibling hashes along the path from leaf to root.
-    /// Verification time is O(log n).
-    /// 
-    /// # Arguments
-    /// * `leaf_index` - The 0-indexed position of the leaf.
-    /// 
-    /// # Returns
-    /// A vector of sibling hashes from leaf to root.
+    /// Generates a sibling path for a logical leaf index.
     pub fn generate_proof(&self, leaf_index: usize) -> Vec<Hash> {
+        if leaf_index >= self.leaf_count {
+            return Vec::new();
+        }
         let mut proof = Vec::new();
-        let mut current_idx = leaf_index;
-
+        let mut index = leaf_index;
         for level in &self.levels[..self.levels.len().saturating_sub(1)] {
-            let sibling_idx = if current_idx % 2 == 0 {
-                current_idx + 1
+            let sibling = if index.is_multiple_of(2) {
+                index + 1
             } else {
-                current_idx - 1
+                index - 1
             };
-
-            if sibling_idx < level.len() {
-                proof.push(level[sibling_idx]);
-            }
-            current_idx /= 2;
+            proof.push(*level.get(sibling).unwrap_or(&level[index]));
+            index /= 2;
         }
         proof
     }
 
-    /// Verifies that a data block is included in the tree at the given index.
-    /// 
-    /// # Arguments
-    /// * `data` - The raw data block.
-    /// * `index` - The claimed leaf index.
-    /// * `proof` - The Merkle Inclusion Proof.
-    /// * `root` - The expected Merkle Root.
-    /// 
-    /// # Returns
-    /// `true` if the proof is valid, `false` otherwise.
+    /// Legacy verifier retained for low-level tests. Protocol verification must
+    /// use `verify_proof_with_size` so that the signed logical tree size is bound.
     pub fn verify_proof(data: &[u8], index: usize, proof: &[Hash], root: &Hash) -> bool {
-        let mut hasher = Sha256::new();
-        hasher.update(data);
-        let mut current_hash: Hash = hasher.finalize().into();
-
-        let mut current_idx = index;
-
+        let mut current_hash = hash_leaf(data);
+        let mut current_index = index;
         for sibling in proof {
-            let mut hasher = Sha256::new();
-            if current_idx % 2 == 0 {
-                hasher.update(&current_hash);
-                hasher.update(sibling);
+            current_hash = if current_index.is_multiple_of(2) {
+                hash_node(&current_hash, sibling)
             } else {
-                hasher.update(sibling);
-                hasher.update(&current_hash);
-            }
-            current_hash = hasher.finalize().into();
-            current_idx /= 2;
+                hash_node(sibling, &current_hash)
+            };
+            current_index /= 2;
         }
-
         &current_hash == root
     }
+
+    /// Verifies proof shape for a caller-supplied logical tree size and index.
+    /// The signed epoch statement must separately bind `leaf_count` because a
+    /// duplicate-last tree can have the same root for adjacent logical sizes.
+    pub fn verify_proof_with_size(
+        data: &[u8],
+        index: usize,
+        leaf_count: usize,
+        proof: &[Hash],
+        root: &Hash,
+    ) -> bool {
+        if leaf_count == 0 || index >= leaf_count || proof.len() != proof_depth(leaf_count) {
+            return false;
+        }
+        Self::verify_proof(data, index, proof, root)
+    }
+}
+
+fn proof_depth(leaf_count: usize) -> usize {
+    let mut width = if leaf_count.is_multiple_of(2) {
+        leaf_count
+    } else {
+        leaf_count + 1
+    };
+    let mut depth = 0;
+    while width > 1 {
+        width = width.div_ceil(2);
+        depth += 1;
+    }
+    depth
+}
+
+fn hash_leaf(data: &[u8]) -> Hash {
+    let mut hasher = Sha256::new();
+    hasher.update(LEAF_DOMAIN);
+    hasher.update((data.len() as u64).to_be_bytes());
+    hasher.update(data);
+    hasher.finalize().into()
+}
+
+fn hash_node(left: &Hash, right: &Hash) -> Hash {
+    let mut hasher = Sha256::new();
+    hasher.update(NODE_DOMAIN);
+    hasher.update(left);
+    hasher.update(right);
+    hasher.finalize().into()
 }
 
 #[cfg(test)]
@@ -134,23 +136,73 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tree_construction_and_proof() {
-        let data: Vec<&[u8]> = vec![b"record0", b"record1", b"record2", b"record3"];
-        let tree = MerkleTree::from_data(&data);
+    fn odd_leaf_proofs_verify_for_every_logical_leaf() {
+        let items = [b"a".as_slice(), b"b", b"c", b"d", b"e"];
+        let tree = MerkleTree::from_data(&items);
+        let root = tree.root().expect("root");
 
-        assert!(tree.root().is_some());
-
-        let proof = tree.generate_proof(1);
-        let root = tree.root().unwrap();
-
-        assert!(MerkleTree::verify_proof(b"record1", 1, &proof, &root));
-        assert!(!MerkleTree::verify_proof(b"tampered", 1, &proof, &root));
+        for (index, item) in items.iter().enumerate() {
+            let proof = tree.generate_proof(index);
+            assert!(MerkleTree::verify_proof_with_size(
+                item,
+                index,
+                items.len(),
+                &proof,
+                &root
+            ));
+        }
     }
 
     #[test]
-    fn test_odd_leaf_count() {
-        let data: Vec<&[u8]> = vec![b"a", b"b", b"c"];
-        let tree = MerkleTree::from_data(&data);
-        assert!(tree.root().is_some());
+    fn proof_rejects_wrong_data_index_or_tree_size() {
+        let items = [b"a".as_slice(), b"b", b"c"];
+        let tree = MerkleTree::from_data(&items);
+        let root = tree.root().expect("root");
+        let proof = tree.generate_proof(2);
+
+        assert!(!MerkleTree::verify_proof_with_size(
+            b"tampered",
+            2,
+            items.len(),
+            &proof,
+            &root
+        ));
+        assert!(!MerkleTree::verify_proof_with_size(
+            b"c",
+            1,
+            items.len(),
+            &proof,
+            &root
+        ));
+        assert!(!MerkleTree::verify_proof_with_size(
+            b"c", 2, 8, &proof, &root
+        ));
+    }
+
+    #[test]
+    fn singleton_tree_has_a_size_bound_duplicate_proof() {
+        let items = [b"a".as_slice()];
+        let tree = MerkleTree::from_data(&items);
+        let root = tree.root().expect("root");
+        let proof = tree.generate_proof(0);
+        assert_eq!(proof.len(), 1);
+        assert!(MerkleTree::verify_proof_with_size(
+            b"a", 0, 1, &proof, &root
+        ));
+    }
+
+    #[test]
+    fn empty_tree_has_no_root_or_proof() {
+        let tree = MerkleTree::from_data(&[]);
+        assert_eq!(tree.root(), None);
+        assert!(tree.generate_proof(0).is_empty());
+    }
+
+    #[test]
+    fn leaf_and_internal_domains_do_not_alias() {
+        let payload = [7_u8; 64];
+        let left: Hash = payload[..32].try_into().expect("left hash");
+        let right: Hash = payload[32..].try_into().expect("right hash");
+        assert_ne!(hash_leaf(&payload), hash_node(&left, &right));
     }
 }

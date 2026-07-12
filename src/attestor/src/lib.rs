@@ -1,2 +1,2 @@
-pub mod circuit;
+pub mod epoch;
 pub mod merkle;
