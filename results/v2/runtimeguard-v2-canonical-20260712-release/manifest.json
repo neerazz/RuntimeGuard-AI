@@ -1,0 +1,219 @@
+{
+  "analysis": {
+    "artifacts": {
+      "figures/attestation_scaling.pdf": "ade46cf2f52eecf2c1cf5a8ae19b9ef18c59c5153294e9ba50329a68b417ccf4",
+      "figures/attestation_scaling.png": "71944743202f0ab8ad8f8b78a76e3aa84598af4b4f6c1bd0287abd95d2ab0510",
+      "figures/inline_latency.pdf": "8c0f32c69851b39df6af73a5bce4869e29e7d73b3738e6518a53ffdc3fa395ad",
+      "figures/inline_latency.png": "12c3a952d5791f2877b396934b1ba00afde622dc66d09fbc799e486f219fd874",
+      "figures/recovery_scaling.pdf": "d35017e2e358e6c8062535baf229360ba96814c01dcac62c69755f3494eba092",
+      "figures/recovery_scaling.png": "03a4e6128907379a0db0c933a2a307a17dbe46733ab1be427e13c52546315d4d",
+      "figures/throughput_scaling.pdf": "f1a9a3a66b48d8117e2ef21f74f1e615872a1b4f1ab0b27efa443fd74d542b1c",
+      "figures/throughput_scaling.png": "6263270bcde1447a6698f5f5005483ec50aac9943dc7726a2c16510ca17574e7",
+      "summary/epoch.csv": "bf8010588f45b619fc4965cde8d38377cc68a4a90310e36dbd85f385b30c4034",
+      "summary/inline_conditions.csv": "21aa364e7878d8b9c53f1ea9e5374cb91157355d5eba44e0efc500033790ce7a",
+      "summary/inline_overhead.csv": "8f25d42ec0da3164311588f18e09901b62cb23619028199540cc2eabbb07eb36",
+      "summary/inline_runs.csv": "2b42e10672c351fe7397dd473c3eaf972772ff42080f052130a73b2307284fbc",
+      "summary/key_findings.json": "cd86197fa70e2da337a1ca3aecf8ad282504f035e5ba4c6e797e2dfd1c413477",
+      "summary/recovery.csv": "6f1984988372fce075f1542d0db2cb44e3be5cae3d535260348b76c60f6f3a53"
+    },
+    "bootstrap_resamples": 10000,
+    "random_seed": 20260711
+  },
+  "artifacts": {
+    "preflight.log": "90ab4f9812737e52470594bfd38737fc3126cd3e68cc4732abfd129eb2714d31",
+    "raw/epoch.csv": "43299d58e6d878bd5988429dd2b1f3b466e5a72d4d506ae14985664171b4c112",
+    "raw/inline.csv": "043a9073b4f85938a494fcc3a608652ce7d7074fbc99bd3c676f2bde6d007895",
+    "raw/recovery.csv": "e2f7a625af140e524870475a9532055c3918a333917eb9b30d127e5df81b66e1"
+  },
+  "canonical": true,
+  "completed": {
+    "epoch": 4,
+    "inline": 720,
+    "recovery": 3
+  },
+  "completed_at_utc": "2026-07-12T07:40:25.721817+00:00",
+  "git_branch": "paper/research-grade-v2",
+  "git_commit": "98c49fb15be7fd3ff49f8358190e14b6f6271cf1",
+  "git_dirty": false,
+  "git_dirty_scope": "source_files",
+  "host": {
+    "hardware": {
+      "chip": "Apple M4 Pro",
+      "cores": "proc 14:10:4:0",
+      "memory": "24 GB",
+      "model_identifier": "Mac16,7",
+      "model_name": "MacBook Pro"
+    },
+    "machine": "arm64",
+    "python": "3.12.13",
+    "python_packages": {
+      "matplotlib": "3.10.8",
+      "numpy": "2.4.2",
+      "pandas": "3.0.0"
+    },
+    "release": "25.5.0",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "system": "Darwin"
+  },
+  "matrix": {
+    "epoch_record_counts": [
+      100,
+      1000,
+      10000,
+      100000
+    ],
+    "epoch_repetitions": 30,
+    "inline": {
+      "conditions": 720,
+      "requests_per_condition": 1000,
+      "shards": 4,
+      "warmup_requests": 200
+    },
+    "recovery_record_counts": [
+      1000,
+      10000,
+      100000
+    ],
+    "recovery_repetitions": 30
+  },
+  "preflight": {
+    "log_sha256": "90ab4f9812737e52470594bfd38737fc3126cd3e68cc4732abfd129eb2714d31",
+    "status": "passed"
+  },
+  "randomization_seed": 20260711,
+  "run_id": "runtimeguard-v2-canonical-20260712-release",
+  "schema_version": 1,
+  "source_closure": {
+    "status": "passed",
+    "verified_at_utc": "2026-07-12T07:40:25.721774+00:00"
+  },
+  "source_digest_sha256": "c78c0c2219e6d02c2f7ffa9aed0365752d05d69f402943c823ed072f3bb7ba2a",
+  "source_files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "5aedcce17ded4b5a95f1a5bae09775a31c8a50514c9d11db40552a7bf97a9a5e"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "25b135e6060bab90bacc104b8240eee42f0d9ef71efd6b5f8c023cc62eb4893c"
+    },
+    {
+      "path": "docs/protocol-v2.md",
+      "sha256": "9cb05756f4e98d14019823db15cf4679ea013a65dbefe323112f4277a2f535ce"
+    },
+    {
+      "path": "experiments/v2/README.md",
+      "sha256": "7412447bdddc26a7a11b1145461319785dd1a3a961fb3948b42bd73f771d123d"
+    },
+    {
+      "path": "experiments/v2/analyze.py",
+      "sha256": "95191b405a5e116e5d927a6acd5e7db9094b67fe4b36747c5a20d29698659d75"
+    },
+    {
+      "path": "experiments/v2/requirements.txt",
+      "sha256": "aef627d304c04ba116cefca1b66c6f4af2725b95d44b1f83474d01af6a1a60fb"
+    },
+    {
+      "path": "experiments/v2/run_experiments.py",
+      "sha256": "de75e89056da7df0a5993f127a269dfdcfe6710834b764973c56341e632e95dc"
+    },
+    {
+      "path": "experiments/v2/test_analyze.py",
+      "sha256": "4a94bfe1d24d87e3f0aae25a55fc5bc69b68316a99b49920e4855e0f228a2035"
+    },
+    {
+      "path": "experiments/v2/test_run_experiments.py",
+      "sha256": "668c0a8d6d00f8d931246120b8a49847efac440566aa2b621da3b68f015ec162"
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "sha256": "1d76a06616a42a984bad672eeb24ca39a0496e95a8b624e21df0d420d1557734"
+    },
+    {
+      "path": "src/attestor/Cargo.toml",
+      "sha256": "c6f7e636f408cb89540e252ced46a3ed8e6d4c9dd717986072f13f83e875fd8a"
+    },
+    {
+      "path": "src/attestor/src/bin/bench_epoch.rs",
+      "sha256": "3cdd7eef90014657c6b6af77a487ab0a7ef2bf976f5f3352c96bf7988bfc2596"
+    },
+    {
+      "path": "src/attestor/src/epoch.rs",
+      "sha256": "b56014828d44c88d5360553b7d4e2f5f961ab0063719ab67592e8d31e15ec143"
+    },
+    {
+      "path": "src/attestor/src/lib.rs",
+      "sha256": "fcc5d56cbb1dcf1250044f2483c5d8aabd7c6ae643c4a73f1a35b95d559eeb0e"
+    },
+    {
+      "path": "src/attestor/src/merkle.rs",
+      "sha256": "e128936dfcc9bdb2544f00661020a396f338481b686c63e91c75b9301336de2d"
+    },
+    {
+      "path": "src/attestor/tests/end_to_end_evidence.rs",
+      "sha256": "c95e6d5b3d471fddb4cd01e486a8b5ec37297c74d71bc3be1855504b3787fab5"
+    },
+    {
+      "path": "src/attestor/tests/protocol_invariants.rs",
+      "sha256": "b1018e377dddb45a8c8dcb7eaaf81e6f87897d2064e8f84020eb37f2bdeb5c9a"
+    },
+    {
+      "path": "src/attestor/tests/signed_epoch.rs",
+      "sha256": "3782b0643ac1922eaa249914b46ba2e84cd8ec667c08fc217caf86d93a3220eb"
+    },
+    {
+      "path": "src/inline/Cargo.toml",
+      "sha256": "8e6a3c0fd696d1dac8b7880b2729c1750402c0916f45e3a517b9220686e1fcdd"
+    },
+    {
+      "path": "src/inline/src/bin/bench_inline.rs",
+      "sha256": "02957cf344e7c25ade90aa295ada90d6cf4aaeb723240cb3c12d2b9bab1933ed"
+    },
+    {
+      "path": "src/inline/src/bin/bench_recovery.rs",
+      "sha256": "5a4e8d010aa280954437ae5f21cf06b74efc519e510ba4847505c984544c5954"
+    },
+    {
+      "path": "src/inline/src/durable_log.rs",
+      "sha256": "50db507833ba0fe4836c12dcf9ca56df3185d57961dc3478c8b984e8c45d9cb5"
+    },
+    {
+      "path": "src/inline/src/engine.rs",
+      "sha256": "5a0bb0a45aeb9490ccd55aab03196a4bfcb26df3bd495e1686e32aacc07ec39e"
+    },
+    {
+      "path": "src/inline/src/lib.rs",
+      "sha256": "7adf789a31e99c4c8038390b18c1e0c910958c0cbbc8d04db3e0f7815e43b68d"
+    },
+    {
+      "path": "src/inline/src/policy.rs",
+      "sha256": "ec11892988d7dbf2acafcbeef9c22df216d3510f68290f96f387c401480902d3"
+    },
+    {
+      "path": "src/inline/src/types.rs",
+      "sha256": "835a67bcf93eb0767c8a53a15e2e86c7bc788046e57b3318c237f09077f8b6dd"
+    },
+    {
+      "path": "src/inline/tests/durable_log.rs",
+      "sha256": "9756eb950ecd3fac55238f3d3f66b268a5b49071646bd1645220da4a55bb5d28"
+    },
+    {
+      "path": "src/inline/tests/engine_integration.rs",
+      "sha256": "5705270ece675e46ce68b23a22dd0950e23b9996be8688d7f8d91d54ab659cb0"
+    },
+    {
+      "path": "src/inline/tests/policy_binding.rs",
+      "sha256": "35cf9f46a9724d6d580094a4e7dcec6523431a7277764d30883f2621106775a2"
+    },
+    {
+      "path": "src/inline/tests/protocol_invariants.rs",
+      "sha256": "f714998619e5e229e907cdc6af3667018359c640c6074d9448231f5282c949c2"
+    },
+    {
+      "path": "src/inline/tests/record_commitment.rs",
+      "sha256": "83beabae9ef4a61dd640c86288cd153c1fa8e0995494c80b70e2c565eadf5839"
+    }
+  ],
+  "started_at_utc": "2026-07-12T07:08:37.384201+00:00",
+  "status": "complete"
+}

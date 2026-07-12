@@ -1,0 +1,127 @@
+$ cargo fmt --all -- --check
+
+[exit=0]
+
+$ cargo clippy --workspace --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+[exit=0]
+
+$ cargo test --workspace --all-targets
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running unittests src/lib.rs (target/debug/deps/runtimeguard_attestor-685c8959bbdbca21)
+
+running 5 tests
+test merkle::tests::empty_tree_has_no_root_or_proof ... ok
+test merkle::tests::leaf_and_internal_domains_do_not_alias ... ok
+test merkle::tests::singleton_tree_has_a_size_bound_duplicate_proof ... ok
+test merkle::tests::proof_rejects_wrong_data_index_or_tree_size ... ok
+test merkle::tests::odd_leaf_proofs_verify_for_every_logical_leaf ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/bench_epoch.rs (target/debug/deps/bench_epoch-05dab3fe9a66a14f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/end_to_end_evidence.rs (target/debug/deps/end_to_end_evidence-74d85698a7641cdc)
+
+running 1 test
+test durable_receipt_can_be_resolved_to_a_trusted_epoch_inclusion_proof ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/protocol_invariants.rs (target/debug/deps/protocol_invariants-a931c116085e005b)
+
+running 2 tests
+test inclusion_rejects_wrong_index_tree_size_and_record ... ok
+test chained_epoch_binds_previous_signed_statement ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/signed_epoch.rs (target/debug/deps/signed_epoch-e4643b246769b17e)
+
+running 4 tests
+test sealing_rejects_sequence_gaps ... ok
+test signed_epoch_is_not_trusted_under_an_attacker_supplied_key ... ok
+test signed_epoch_rejects_statement_tampering ... ok
+test signed_epoch_binds_contiguous_records_and_verifies ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/runtimeguard_inline-5ba0781e7261fbb1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/bench_inline.rs (target/debug/deps/bench_inline-82f37a72108bc135)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/bench_recovery.rs (target/debug/deps/bench_recovery-dccfe4817347a135)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/durable_log.rs (target/debug/deps/durable_log-96c9672533d6e7b9)
+
+running 3 tests
+test durable_log_rejects_tampering_in_a_complete_frame ... ok
+test durable_log_round_trips_records_and_receipts ... ok
+test durable_log_truncates_only_an_incomplete_tail_frame ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/engine_integration.rs (target/debug/deps/engine_integration-f74191faf6757c71)
+
+running 5 tests
+test zero_shards_is_rejected_instead_of_panicking ... ok
+test reopening_with_a_different_shard_count_is_rejected ... ok
+test reopening_rejects_a_validly_framed_sequence_gap ... ok
+test durable_evaluation_returns_receipt_and_survives_reopen ... ok
+test concurrent_durable_evaluations_recover_every_record_once ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+     Running tests/policy_binding.rs (target/debug/deps/policy_binding-6216ffeb96f05b5d)
+
+running 1 test
+test compiled_policy_descriptor_is_derived_from_the_evaluated_policy_source ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/protocol_invariants.rs (target/debug/deps/protocol_invariants-6aa8eef77e3b32ba)
+
+running 7 tests
+test reopening_with_a_different_receipt_key_is_rejected ... ok
+test reused_request_id_with_different_commitment_is_rejected ... ok
+test signed_receipt_verifies_under_an_external_trust_anchor ... ok
+test idempotent_replay_returns_original_receipt_without_duplicate_record ... ok
+test concurrent_exact_replays_commit_only_once ... ok
+test second_writer_for_the_same_log_directory_is_rejected_until_release ... ok
+test sequence_determines_protocol_stable_shard_assignment ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running tests/record_commitment.rs (target/debug/deps/record_commitment-740e9ca93b93ce41)
+
+running 2 tests
+test request_commitment_is_deterministic_and_field_sensitive ... ok
+test record_commitment_binds_policy_version_and_excludes_raw_prompt ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[exit=0]
+
+$ cargo audit
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1159 security advisories (from <HOME>/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (105 crate dependencies)
+[exit=0]
+

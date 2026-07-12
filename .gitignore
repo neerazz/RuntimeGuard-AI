@@ -6,10 +6,18 @@ target/
 .vscode/
 *.iml
 
+# Python
+__pycache__/
+*.pyc
+.venv/
+paper/v2/build/
+
 # OS
 .DS_Store
 Thumbs.db
 
 # Rust
-Cargo.lock
 *.pdb
+
+# Non-canonical benchmark smoke runs
+results/v2/*quick*/
