@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use RuntimeGuard-AI V2, cite the software and the accompanying V2 paper."
+title: "RuntimeGuard-AI V2"
+type: software
+authors:
+  - given-names: "Neeraj Kumar"
+    family-names: "Singh Beshane"
+version: "2.0.0"
+repository-code: "https://github.com/neerazz/RuntimeGuard-AI"
+license: MIT
+keywords:
+  - AI accountability
+  - audit evidence
+  - durable logging
+  - Merkle tree
+  - policy enforcement
+preferred-citation:
+  type: article
+  title: "The Acknowledgment Point Is the System: Durable Policy-Decision Receipts for AI Audit Evidence"
+  authors:
+    - given-names: "Neeraj Kumar"
+      family-names: "Singh Beshane"
+  year: 2026

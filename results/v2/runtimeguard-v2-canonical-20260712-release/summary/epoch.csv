@@ -1,0 +1,5 @@
+record_count,repetitions,build_tree_ns_median,build_tree_ns_ci_low,build_tree_ns_ci_high,seal_epoch_ns_median,seal_epoch_ns_ci_low,seal_epoch_ns_ci_high,generate_proof_ns_median,generate_proof_ns_ci_low,generate_proof_ns_ci_high,verify_proof_ns_median,verify_proof_ns_ci_low,verify_proof_ns_ci_high,verify_signature_ns_median,verify_signature_ns_ci_low,verify_signature_ns_ci_high
+100,30,43958.5,43792.0,48646.0,116187.0,111291.5,180375.0,84.0,83.0,125.0,1791.5,1750.0,1833.0,22667.0,22020.5,25542.0
+1000,30,455479.0,440083.0,489584.0,1101396.0,1052104.5,1177416.0,167.0,125.0,167.0,2583.5,2459.0,2729.0,23583.0,22625.0,25271.012499999993
+10000,30,4100979.0,4061083.5,4126250.0,9591166.5,9480895.5,9630687.5,333.0,250.0,437.5,3083.0,3041.0,3146.0,21771.0,21229.0,22708.5
+100000,30,41498625.0,41097937.5,41837853.5,96954958.0,96408770.5,98005063.0,1042.0,979.0,1104.0,3979.0,3916.0,4042.0,25750.0,25604.5,26229.5

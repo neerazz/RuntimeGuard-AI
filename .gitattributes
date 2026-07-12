@@ -1,0 +1,3 @@
+# Machine-generated evidence uses RFC-compatible CSV line endings and immutable logs.
+results/v2/**/raw/*.csv -whitespace
+results/v2/**/preflight.log -whitespace

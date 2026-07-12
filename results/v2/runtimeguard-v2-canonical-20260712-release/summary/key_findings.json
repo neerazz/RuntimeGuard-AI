@@ -1,0 +1,93 @@
+{
+  "canonical": true,
+  "inline_condition": {
+    "modes": {
+      "evidence:data": {
+        "p50_us_ci_95": [
+          16011.03125,
+          16058.552
+        ],
+        "p50_us_median": 16018.64625,
+        "p99_us_ci_95": [
+          29825.133079999992,
+          40747.563079999985
+        ],
+        "p99_us_median": 33963.302379999994,
+        "repetitions": 20,
+        "throughput_rps_ci_95": [
+          227.53520694079162,
+          244.14421118128593
+        ],
+        "throughput_rps_median": 240.12256799289864
+      },
+      "evidence:full": {
+        "p50_us_ci_95": [
+          14506.375,
+          16015.09375
+        ],
+        "p50_us_median": 16009.1355,
+        "p99_us_ci_95": [
+          28596.805419999997,
+          29949.046875
+        ],
+        "p99_us_median": 29700.825624999998,
+        "repetitions": 20,
+        "throughput_rps_ci_95": [
+          242.8073070365515,
+          270.76053023334896
+        ],
+        "throughput_rps_median": 244.41566934822836
+      },
+      "evidence:none": {
+        "p50_us_ci_95": [
+          126.32325,
+          148.708
+        ],
+        "p50_us_median": 141.875,
+        "p99_us_ci_95": [
+          228.286335,
+          251.38937499999997
+        ],
+        "p99_us_median": 238.14453499999996,
+        "repetitions": 20,
+        "throughput_rps_ci_95": [
+          25546.035895310633,
+          30813.526831359006
+        ],
+        "throughput_rps_median": 27192.807809111582
+      },
+      "policy_only": {
+        "p50_us_ci_95": [
+          0.834,
+          1.2085
+        ],
+        "p50_us_median": 0.938,
+        "p99_us_ci_95": [
+          3.0024249999999975,
+          3.9165
+        ],
+        "p99_us_median": 3.14641,
+        "repetitions": 20,
+        "throughput_rps_ci_95": [
+          1377143.454619911,
+          1984660.2659971286
+        ],
+        "throughput_rps_median": 1717597.125931815
+      }
+    },
+    "prompt_bytes": 2048,
+    "threads": 4
+  },
+  "largest_epoch": {
+    "record_count": 100000,
+    "seal_epoch_us_median": 96954.958,
+    "verify_proof_us_median": 3.979,
+    "verify_signature_us_median": 25.75
+  },
+  "largest_recovery": {
+    "open_ms_median": 665.4827295,
+    "read_sort_ms_median": 295.487209,
+    "record_count": 100000
+  },
+  "scope": "Controlled single-host component benchmark; quick runs are pipeline validation only."
+}

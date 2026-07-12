@@ -1,96 +1,66 @@
 # RuntimeGuard-AI
 
-**RuntimeGuard-AI** is the official reference implementation for the research paper:
+RuntimeGuard-AI V2 is a research prototype for policy-bound, crash-recoverable AI decision evidence. It synchronously commits a deterministic policy decision at an explicit durability boundary, returns an externally verifiable Ed25519 receipt, and later groups committed records into chained, signed Merkle epochs.
 
-> **"RuntimeGuard-AI: Scalable Tamper-Evident Accountability for High-Risk AI Systems Under the EU AI Act"**
-> *Submitted to USENIX Security 2026*
->
-> **Author:** Neeraj Kumar Singh Beshane
+The implementation is intentionally narrow. It does not claim zero-knowledge policy execution, model-inference correctness, external transparency witnessing, compromised-host anti-rollback, or EU AI Act compliance.
 
-**Repository:** [https://github.com/neerazz/RuntimeGuard-AI](https://github.com/neerazz/RuntimeGuard-AI)
+## Publication history
 
-This repository provides the cryptographic attestation architecture described in the paper, designed to meet **Article 14 (Human Oversight)** requirements without compromising inference latency.
+The original journal article is preserved as the immutable version of record at [DOI 10.5281/zenodo.18527375](https://doi.org/10.5281/zenodo.18527375). Its historical ZK, performance, and regulatory claims are not evidence for V2. The verified successor paper is [`paper/v2/runtimeguard-v2.pdf`](paper/v2/runtimeguard-v2.pdf); its canonical evidence is [`results/v2/runtimeguard-v2-canonical-20260712-release`](results/v2/runtimeguard-v2-canonical-20260712-release).
 
----
+Version 2 is a protocol and evidence-format break. See [`CHANGELOG.md`](CHANGELOG.md) for the exact additions, removals, and claim corrections.
 
-## 📄 Research Paper
+## Implemented V2 properties
 
-The full manuscript and supplementary materials are available in the `paper/` directory:
+- exact-source compiled policy identity and deterministic request/record commitments;
+- framed checksummed shard logs with buffered, data-sync, and full-sync acknowledgement modes;
+- an OS-backed exclusive writer lease, contiguous sequence recovery, and fail-stopped append errors;
+- exact request replay idempotency and conflicting request-ID rejection;
+- signed commit receipts verified against an independently supplied Ed25519 key;
+- domain-separated SHA-256 Merkle trees with logical-size-bound inclusion proofs;
+- signed epoch statements binding policy, sequence range, tree size, predecessor statement, and signer key ID;
+- production-code benchmarks with immutable run directories, source hashes, raw observations, and data-derived figures.
 
-*   **[RuntimeGuard_AI_Submission_Ready.md](paper/RuntimeGuard_AI_Submission_Ready.md)**: The complete research paper (Markdown, submission-ready).
-*   **[research.md](paper/research.md)**: State-of-the-art analysis and novelty audit.
-*   **[figures/](paper/figures/)**: All evaluation plots and architecture diagrams.
+The precise guarantee and threat boundaries are specified in [`docs/protocol-v2.md`](docs/protocol-v2.md).
 
----
+## Repository map
 
-## 🏗️ Repository Structure
-
-This project is strictly scoped to the artifacts described in the paper.
-
-```
-runtimeguard-ai/
-├── src/
-│   ├── inline/           # [Rust] Inline Policy Engine (Paper §5.2)
-│   │   └── src/
-│   │       ├── engine.rs # Theorem 1 (Latency Separation) via try_send + tokio::spawn
-│   │       └── types.rs  # ComplianceRecord, PolicyResult
-│   │
-│   └── attestor/         # [Rust] ZK Attestation Service (Paper §5.3)
-│       └── src/
-│           ├── circuit.rs    # ComplianceCircuit (Groth16)
-│           ├── merkle.rs     # Merkle Tree for Inclusion Proofs (Appendix B.2)
-│           └── bin/
-│               └── bench_prove.rs  # Benchmarking harness
-│
-├── paper/                # Research manuscript and figures
-├── Cargo.toml            # Workspace definition
-└── LICENSE               # MIT License
+```text
+src/inline/       policy evaluation, durable evidence log, commit receipts, benchmarks
+src/attestor/     Merkle proofs, signed epochs, verification, benchmarks
+experiments/v2/   preregistered runner, analysis, and reproducibility contract
+docs/             public protocol specification
+paper/v2/         successor figures-as-code and manuscript artifacts
+results/v2/       canonical evidence only; quick/failed runs are excluded from releases
 ```
 
----
+## Verify the implementation
 
-## 🚀 Key Claims Validation
+Rust `1.92.0` is pinned by `rust-toolchain.toml`.
 
-### 1. Latency Separation (Theorem 1)
-The **Inline Policy Engine** (`src/inline`) demonstrates how policy enforcement is decoupled from logging I/O.
-*   **Code:** `src/inline/src/engine.rs` (lines 84-112)
-*   **Mechanism:** Uses `tokio::spawn` to offload full-queue events to a disk buffer, ensuring the critical inference path never blocks.
-
-### 2. ZK Attestation Performance (Table 6)
-The **Attestor** (`src/attestor`) provides the benchmark harness to reproduce the paper's performance claims.
-*   **Claim:** ~62ms Witness Generation, ~1.4s Total Proving (50k constraints).
-*   **Run Benchmark:**
-    ```bash
-    cd src/attestor
-    cargo run --release --bin bench_prove -- --constraints 50000 --samples 10
-    ```
-
-### 3. Merkle Inclusion Proofs (Appendix B.2)
-The **Merkle Tree** implementation (`src/attestor/src/merkle.rs`) provides:
-*   `MerkleTree::from_data()` - Construct tree from compliance records.
-*   `generate_proof()` - Generate O(log n) inclusion proof.
-*   `verify_proof()` - Verify a record's existence.
-
----
-
-## 🛠️ Quickstart
-
-### Prerequisites
-*   **Rust**: Latest stable (`rustup update`)
-
-### Run Tests
 ```bash
-# Verify Inline Engine Logic
-cd src/inline
-cargo test
-
-# Verify Cryptographic Components (Merkle + ZK)
-cd ../attestor
-cargo test
-cargo run --release --bin bench_prove
+./reproduce.sh --verify
 ```
 
----
+The entrypoint runs formatting, strict Clippy, all-target tests, dependency audit, Python tests, and script compilation. The equivalent commands are:
 
-## 📜 License
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace --all-targets
+cargo audit
+```
+
+Run the non-canonical smoke matrix:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/pip install -r experiments/v2/requirements.txt
+./reproduce.sh --quick
+```
+
+See [`experiments/v2/README.md`](experiments/v2/README.md) before running or interpreting the full matrix. Quick and failed runs are pipeline diagnostics, never publication evidence.
+
+## License
+
 MIT
