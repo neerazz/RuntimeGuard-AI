@@ -342,10 +342,9 @@ fn validate_or_create_manifest(config: &EngineConfig) -> Result<()> {
             .with_context(|| format!("parse manifest {}", path.display()))?;
         if actual != expected {
             bail!(
-                "engine configuration conflicts with manifest {}: expected {:?}, found {:?}",
+                "engine configuration conflicts with manifest {}:\n{}",
                 path.display(),
-                expected,
-                actual
+                describe_manifest_conflict(&expected, &actual)
             );
         }
         return Ok(());
@@ -388,6 +387,63 @@ fn sync_directory(_path: &std::path::Path) -> Result<()> {
 #[cfg(not(unix))]
 fn sync_parent_of(_path: &std::path::Path) -> Result<()> {
     Ok(())
+}
+
+/// Renders only the fields that actually differ, in operator terms.
+///
+/// The common cause is an edited policy source against an existing evidence
+/// directory, so the message names that case instead of dumping byte arrays.
+fn describe_manifest_conflict(expected: &EngineManifest, actual: &EngineManifest) -> String {
+    let mut lines = Vec::new();
+    let mut diff = |field: &str, expected: String, found: String| {
+        if expected != found {
+            lines.push(format!(
+                "  {field}: configured {expected}, manifest {found}"
+            ));
+        }
+    };
+    diff(
+        "schema_version",
+        expected.schema_version.to_string(),
+        actual.schema_version.to_string(),
+    );
+    diff(
+        "record_format",
+        expected.record_format.clone(),
+        actual.record_format.clone(),
+    );
+    diff(
+        "num_shards",
+        expected.num_shards.to_string(),
+        actual.num_shards.to_string(),
+    );
+    diff(
+        "sync_policy",
+        format!("{:?}", expected.sync_policy),
+        format!("{:?}", actual.sync_policy),
+    );
+    diff(
+        "policy_digest",
+        hex(&expected.policy_digest),
+        hex(&actual.policy_digest),
+    );
+    diff(
+        "receipt_verifying_key",
+        hex(&expected.receipt_verifying_key),
+        hex(&actual.receipt_verifying_key),
+    );
+    if expected.policy_digest != actual.policy_digest {
+        lines.push(
+            "  hint: the policy source changed. Policy identity is the exact source bytes, \
+             so use a new evidence directory for the new policy version."
+                .to_owned(),
+        );
+    }
+    lines.join("\n")
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn receipt_bytes(receipt: &CommitReceipt) -> Vec<u8> {

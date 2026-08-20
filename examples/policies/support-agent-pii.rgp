@@ -1,0 +1,32 @@
+runtimeguard-policy/v1
+id=support-agent-pii
+version=1
+
+# Deployment: a customer-support assistant that forwards ticket text to a
+# hosted LLM provider. The ticket body is whatever the customer typed, which
+# routinely includes identifiers they were never asked for. Without a guard at
+# the call site those bytes leave your trust boundary and land in a vendor's
+# request logs, where you cannot delete them.
+#
+# Rules are ordered most-specific first: a string that looks like both a card
+# and a routing number should be reported as the card.
+
+block us-ssn \b\d{3}-\d{2}-\d{4}\b
+
+# Issuer-prefixed card shapes. Amex is 15 digits grouped 4-6-5; Visa,
+# Mastercard, and Discover are 16 digits grouped 4-4-4-4, so they need
+# separate alternatives rather than one loose digit run.
+# This matches the shape only. It does not run a Luhn check, so it both
+# over-matches on some 16-digit strings and misses unusual issuer ranges.
+block payment-card \b(?:3[47]\d{2}[ -]?\d{6}[ -]?\d{5}|(?:4\d{3}|5[1-5]\d{2}|6(?:011|5\d{2}))[ -]?\d{4}[ -]?\d{4}[ -]?\d{4})\b
+
+# US bank account details volunteered in refund and chargeback threads.
+block us-routing-and-account (?i)\brouting\b[^\n]{0,40}\b\d{9}\b
+
+# Full date of birth alongside a name is the pairing that turns a support
+# transcript into an identity-theft kit.
+block date-of-birth (?i)\b(?:dob|date of birth)\b[^\n]{0,20}\b\d{1,2}[/-]\d{1,2}[/-](?:19|20)\d{2}\b
+
+# Not a block: agents legitimately need to discuss account changes, but a
+# human should see the ones that move money or access.
+escalate account-takeover-request (?i)\b(?:change|update|reset)\b[^\n]{0,30}\b(?:email address|phone number|password|mfa|two.factor)\b

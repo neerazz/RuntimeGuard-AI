@@ -1,0 +1,58 @@
+name: verify
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned toolchain
+        run: rustup show # rust-toolchain.toml pins 1.92.0 with rustfmt/clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --workspace --all-targets
+      - name: Quickstart smoke (clone-to-first-policy path)
+        run: |
+          set -euxo pipefail
+          cargo build --release -p runtimeguard-cli
+          BIN=./target/release/runtimeguard
+
+          # The auditor's key comes from keygen, never from the artifact under test.
+          $BIN keygen --out /tmp/rg-signing.key \
+            | sed -n 's/^verifying key (share with auditors): //p' > /tmp/rg-verifying.key
+          test -s /tmp/rg-verifying.key
+
+          $BIN validate examples/policies/starter.rgp
+          $BIN evaluate \
+            --policy examples/policies/starter.rgp \
+            --evidence-dir /tmp/rg-evidence \
+            --signing-key /tmp/rg-signing.key \
+            --request-id ci-smoke-1 \
+            --prompt "my SSN is 123-45-6789" > /tmp/receipt.json
+          grep -q '"decision": "Blocked"' /tmp/receipt.json
+          $BIN verify-receipt \
+            --receipt /tmp/receipt.json \
+            --verifying-key /tmp/rg-verifying.key \
+            --require-durable
+
+          # A tampered receipt must fail closed.
+          python3 -c 'import json,sys
+          r = json.load(sys.stdin)
+          sig = bytearray.fromhex(r["receipt"]["signature"])
+          sig[0] ^= 1
+          r["receipt"]["signature"] = sig.hex()
+          json.dump(r, sys.stdout)' \
+            < /tmp/receipt.json > /tmp/receipt-tampered.json
+          if $BIN verify-receipt --receipt /tmp/receipt-tampered.json \
+               --verifying-key /tmp/rg-verifying.key; then
+            echo "tampered receipt was accepted" >&2
+            exit 1
+          fi

@@ -1,0 +1,30 @@
+runtimeguard-policy/v1
+id=rag-untrusted-content
+version=1
+
+# Deployment: a retrieval-augmented assistant over documents your users upload
+# — support attachments, scraped pages, shared wiki exports. Retrieved chunks
+# are attacker-controlled text that arrives inside the same context window as
+# your own instructions, and the model has no reliable way to tell them apart.
+#
+# Everything here escalates rather than blocks. These phrases occur in
+# legitimate documents (a security runbook discusses prompt injection; a
+# changelog quotes an old instruction), so a human decides. Blocking on them
+# produces false positives that train operators to disable the guard.
+
+escalate instruction-override (?i)\b(?:ignore|disregard|forget|override)\b[^\n]{0,20}\b(?:previous|prior|above|earlier|system)\b[^\n]{0,20}\b(?:instruction|instructions|prompt|prompts|rule|rules|direction|directions)\b
+
+escalate role-reassignment (?i)\byou are (?:now |no longer )(?:a|an|the|in)\b
+
+escalate system-prompt-exfiltration (?i)\b(?:reveal|repeat|print|output|show|display|summarize)\b[^\n]{0,25}\b(?:system prompt|initial instructions|your instructions|these instructions|developer message)\b
+
+escalate tool-coercion-to-external-host (?i)\b(?:send|post|upload|forward|exfiltrate|transmit)\b[^\n]{0,30}https?://
+
+# Zero-width and bidirectional control characters used to hide instructions
+# from a human reviewing the same document.
+escalate hidden-unicode-controls [\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}]
+
+# Markdown image and link syntax pointing at an external host is the classic
+# silent-exfiltration channel: the model renders it, the browser fetches it,
+# and the query string carries whatever the model was persuaded to put there.
+escalate markdown-external-fetch !\[[^\]]*\]\(https?://[^)]+\)

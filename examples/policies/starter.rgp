@@ -1,0 +1,12 @@
+runtimeguard-policy/v1
+id=starter-policy
+version=1
+
+# Block United States SSN patterns.
+block ssn \b\d{3}-\d{2}-\d{4}\b
+
+# Block payment-card-shaped numbers.
+block card \b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b
+
+# Escalate prompt-injection style phrases for human review.
+escalate injection (?i)\b(ignore previous instructions|jailbreak|exfiltrate)\b
