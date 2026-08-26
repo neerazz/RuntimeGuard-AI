@@ -33,6 +33,7 @@ cargo build --release -p runtimeguard-cli
   --evidence-dir /tmp/rg-evidence \
   --signing-key /tmp/rg-signing.key \
   --request-id demo-1 \
+  --timestamp 2026-08-20T12:00:00Z \
   --prompt "my SSN is 123-45-6789" > /tmp/receipt.json
 
 # 5. Verify the receipt with only the public verifying key.
@@ -46,6 +47,12 @@ echo "<verifying key hex printed by keygen>" > /tmp/rg-verifying.key
 Step 4 prints the decision (`Blocked` for the SSN example), the triggered rule,
 and the Ed25519-signed commit receipt. Step 5 verifies that receipt with the
 independently supplied key, exactly as the protocol's audit flow requires.
+
+The CLI prints `request_timestamp` in the evaluation output. If a caller
+retries the same `--request-id`, it must pass the exact same `--timestamp` and
+request fields; request identity intentionally includes the timestamp. A
+different timestamp is a different request and fails closed as a request-ID
+conflict rather than silently returning or duplicating evidence.
 
 ## The policy source format
 

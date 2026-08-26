@@ -373,10 +373,19 @@ fn sync_directory(path: &std::path::Path) -> Result<()> {
 
 #[cfg(unix)]
 fn sync_parent_of(path: &std::path::Path) -> Result<()> {
-    let parent = path
-        .parent()
-        .ok_or_else(|| anyhow::anyhow!("evidence directory has no parent: {}", path.display()))?;
-    sync_directory(parent)
+    sync_directory(parent_directory_for_sync(path))
+}
+
+/// Returns the actual directory containing `path` for a metadata sync.
+///
+/// Rust represents the parent of a single relative component (`evidence`) as
+/// an empty path. POSIX treats `open("")` as ENOENT, while the intended parent
+/// is the current directory. Nested and absolute paths retain their real
+/// parent unchanged.
+fn parent_directory_for_sync(path: &std::path::Path) -> &std::path::Path {
+    path.parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| std::path::Path::new("."))
 }
 
 #[cfg(not(unix))]
@@ -462,4 +471,25 @@ fn receipt_bytes(receipt: &CommitReceipt) -> Vec<u8> {
 fn push_field(target: &mut Vec<u8>, value: &[u8]) {
     target.extend_from_slice(&(value.len() as u64).to_be_bytes());
     target.extend_from_slice(value);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parent_directory_for_sync;
+    use std::path::Path;
+
+    #[test]
+    fn bare_evidence_directory_syncs_its_real_parent_directory() {
+        // `runtimeguard evaluate --evidence-dir evidence` is the documented
+        // quickstart shape. Its Path parent is an empty component, which must
+        // resolve to the current directory instead of attempting to open "".
+        assert_eq!(
+            parent_directory_for_sync(Path::new("evidence")),
+            Path::new(".")
+        );
+        assert_eq!(
+            parent_directory_for_sync(Path::new("state/evidence")),
+            Path::new("state")
+        );
+    }
 }

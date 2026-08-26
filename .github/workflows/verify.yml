@@ -36,12 +36,24 @@ jobs:
             --evidence-dir /tmp/rg-evidence \
             --signing-key /tmp/rg-signing.key \
             --request-id ci-smoke-1 \
+            --timestamp 2026-08-20T12:00:00Z \
             --prompt "my SSN is 123-45-6789" > /tmp/receipt.json
           grep -q '"decision": "Blocked"' /tmp/receipt.json
           $BIN verify-receipt \
             --receipt /tmp/receipt.json \
             --verifying-key /tmp/rg-verifying.key \
             --require-durable
+
+          # The same request ID and timestamp must replay the original
+          # signed receipt without appending a duplicate record.
+          $BIN evaluate \
+            --policy examples/policies/starter.rgp \
+            --evidence-dir /tmp/rg-evidence \
+            --signing-key /tmp/rg-signing.key \
+            --request-id ci-smoke-1 \
+            --timestamp 2026-08-20T12:00:00Z \
+            --prompt "my SSN is 123-45-6789" > /tmp/receipt-replay.json
+          cmp /tmp/receipt.json /tmp/receipt-replay.json
 
           # A tampered receipt must fail closed.
           python3 -c 'import json,sys

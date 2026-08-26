@@ -57,6 +57,11 @@ enum Command {
         /// Caller-chosen unique request identifier.
         #[arg(long)]
         request_id: String,
+        /// RFC3339 timestamp bound into request identity. Reuse this exact
+        /// value when retrying the same request ID. Defaults to the current
+        /// time for a new request.
+        #[arg(long)]
+        timestamp: Option<String>,
         /// The prompt text to evaluate.
         #[arg(long)]
         prompt: String,
@@ -109,6 +114,7 @@ struct EvaluateOutput {
     decision: String,
     rules_triggered: Vec<String>,
     confidence_micros: u32,
+    request_timestamp: String,
     durable: bool,
     sequence: u64,
     receipt: ReceiptEnvelope,
@@ -170,6 +176,7 @@ fn main() -> Result<()> {
             evidence_dir,
             signing_key,
             request_id,
+            timestamp,
             prompt,
             model_id,
             sync,
@@ -179,6 +186,7 @@ fn main() -> Result<()> {
             &evidence_dir,
             &signing_key,
             &request_id,
+            timestamp.as_deref(),
             &prompt,
             &model_id,
             sync.into(),
@@ -233,6 +241,7 @@ fn evaluate(
     evidence_dir: &Path,
     signing_key_path: &Path,
     request_id: &str,
+    timestamp: Option<&str>,
     prompt: &str,
     model_id: &str,
     sync_policy: SyncPolicy,
@@ -248,9 +257,10 @@ fn evaluate(
         receipt_signing_key: signing_key,
     })?;
 
+    let request_timestamp = parse_request_timestamp(timestamp)?;
     let request = InferenceRequest {
         id: request_id.to_owned(),
-        timestamp: Utc::now(),
+        timestamp: request_timestamp,
         model_id: model_id.to_owned(),
         prompt: prompt.to_owned(),
         input_data: String::new(),
@@ -262,12 +272,26 @@ fn evaluate(
         decision: format!("{:?}", outcome.policy_result.decision),
         rules_triggered: outcome.policy_result.rules_triggered.clone(),
         confidence_micros: outcome.policy_result.confidence_micros,
+        request_timestamp: request.timestamp.to_rfc3339(),
         durable: outcome.evidence.durable,
         sequence: outcome.evidence.sequence,
         receipt: (&outcome.evidence).into(),
     };
     println!("{}", serde_json::to_string_pretty(&output)?);
     Ok(())
+}
+
+fn parse_request_timestamp(value: Option<&str>) -> Result<chrono::DateTime<Utc>> {
+    match value {
+        None => Ok(Utc::now()),
+        Some(value) => chrono::DateTime::parse_from_rfc3339(value)
+            .with_context(|| {
+                format!(
+                    "parse --timestamp '{value}'; expected RFC3339 such as 2026-08-20T12:00:00Z"
+                )
+            })
+            .map(|timestamp| timestamp.with_timezone(&Utc)),
+    }
 }
 
 fn verify_receipt(receipt_path: &Path, key_path: &Path, require_durable: bool) -> Result<()> {
@@ -367,7 +391,7 @@ fn hex_decode(text: &str) -> Result<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{hex_decode, hex_encode, parse_receipt};
+    use super::{hex_decode, hex_encode, parse_receipt, parse_request_timestamp};
 
     #[test]
     fn hex_round_trip() {
@@ -401,5 +425,13 @@ mod tests {
         let mut short = receipt.clone();
         short["record_commitment"] = serde_json::json!("00");
         assert!(parse_receipt(&short.to_string()).is_err());
+    }
+
+    #[test]
+    fn explicit_request_timestamp_is_replayable_and_invalid_values_fail() {
+        let timestamp =
+            parse_request_timestamp(Some("2026-08-20T12:00:00Z")).expect("parse RFC3339 timestamp");
+        assert_eq!(timestamp.to_rfc3339(), "2026-08-20T12:00:00+00:00");
+        assert!(parse_request_timestamp(Some("not-a-timestamp")).is_err());
     }
 }
