@@ -3,8 +3,9 @@ message: "If you use RuntimeGuard-AI V2, cite the software and the accompanying 
 title: "RuntimeGuard-AI V2"
 type: software
 authors:
-  - given-names: "Neeraj Kumar"
-    family-names: "Singh Beshane"
+  - given-names: "Neeraj Kumar Singh"
+    family-names: "Beshane"
+    orcid: "https://orcid.org/0009-0002-2125-1805"
 version: "2.0.0"
 repository-code: "https://github.com/neerazz/RuntimeGuard-AI"
 license: MIT
@@ -18,8 +19,9 @@ preferred-citation:
   type: article
   title: "The Acknowledgment Point Is the System: Durable Policy-Decision Receipts for AI Audit Evidence"
   authors:
-    - given-names: "Neeraj Kumar"
-      family-names: "Singh Beshane"
+    - given-names: "Neeraj Kumar Singh"
+      family-names: "Beshane"
+      orcid: "https://orcid.org/0009-0002-2125-1805"
   year: 2026
   doi: "10.48550/arXiv.2608.17176"
   url: "https://arxiv.org/abs/2608.17176"
